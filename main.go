@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +25,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 const MaxLimitHit = 10;
@@ -96,6 +101,48 @@ func classifyTransaction(desc string) (*Result, *ChatResponse, error) {
 	json.Unmarshal([]byte(jsonStr), &result)
 
 	return &result, &chatResp, err
+}
+
+func hitChatGpt(desc string) (*Result, *ChatResponse, error) {
+
+	prompt := fmt.Sprintf(utils.PromptDefault, desc)
+
+	client := openai.NewClient(
+		option.WithAPIKey(config.AppConfig.LLMApiKey), // Gantilah dengan API key Anda
+	)
+
+	chatCompletion, err := client.Chat.Completions.New(
+		context.TODO(),
+		openai.ChatCompletionNewParams{
+			Messages: []openai.ChatCompletionMessageParamUnion{
+				openai.UserMessage(prompt),
+			},
+			Model: "gpt-4.1-nano",
+			ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+				OfJSONObject: &shared.ResponseFormatJSONObjectParam{
+					Type: "json_object",
+				},
+			},
+		},
+	)
+	if err != nil {
+		panic(err.Error())
+	}
+	jsonBytes, err := json.MarshalIndent(chatCompletion, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var chatResp ChatResponse
+	json.Unmarshal(jsonBytes, &chatResp)
+	jsonStr := chatResp.Choices[0].Message.Content
+
+	var result Result
+	json.Unmarshal([]byte(jsonStr), &result)
+
+	fmt.Println(chatResp)
+	fmt.Println(result)
+	return &result, &chatResp, nil
 }
 
 func connectDB() {
@@ -290,7 +337,8 @@ func main() {
 		}
 
 		// Klasifikasi prompt & buat transaksi
-		result, fullResponse, _ := classifyTransaction(update.Message.Text)
+		// result, fullResponse, _ := classifyTransaction(update.Message.Text)
+		result, fullResponse, _ := hitChatGpt(update.Message.Text)
 
 		transactionType, err := utils.ParseTransactionType(result.TransactionType)
 		if err != nil {

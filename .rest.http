@@ -16,3 +16,36 @@ Authorization: Bearer
 ###
 GET https://duite-bot.brogrammer.id/health
 Content-Type: application/json
+
+### Chat GPT-4.1 nano
+POST https://api.openai.com/v1/responses
+Content-Type: application/json
+Authorization: Bearer 
+
+{
+  "model": "gpt-4.1-nano",
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Analisis deskripsi transaksi berikut:\nDeskripsi: jajan di bude 5jt500 dengan bakso dan telor 100kg\n\nEkstrak informasi:\n1. Tipe transaksi (INCOME/EXPENSE)\n2. Nilai transaksi\n3. Kategori transaksi (bahasa indonesia)\n\nHanya respon dengan format JSON:\n{\n\t\"type\": \"INCOME|EXPENSE\",\n\t\"amount\": number,\n\t\"category\": \"string\"\n}"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {},
+  "tools": [],
+  "temperature": 1,
+  "max_output_tokens": 2048,
+  "top_p": 1,
+  "store": true
+}
+
+

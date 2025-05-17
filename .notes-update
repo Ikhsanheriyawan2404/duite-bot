@@ -53,5 +53,7 @@ Berikut adalah daftar task kamu yang sudah dirapikan dan dikategorikan agar lebi
 ### 📝 Research & Development
 
 * [ ] Pelajari tokenization & how LLM working (temperature, cache hit & etc)
+* [ ] ChatGPT tai ada konsep rate limitnya. model deepseek-chat tidak, cuma gpt4o-nano harga kompetetif dan menang input image & responset time
+* [ ] efisiensi token input untuk bahasa inggris jika lebih sedikit token dari b.indo, dan output tetap indonesia
 
 ---
