@@ -1,0 +1,57 @@
+Berikut adalah daftar task kamu yang sudah dirapikan dan dikategorikan agar lebih mudah dipahami dan dikerjakan:
+
+---
+
+### ✅ Authentication & Access Control
+
+* [ ] Handle user yang tidak terdaftar ketika mengakses dashboard
+
+---
+
+### 🎨 Frontend Improvements
+
+* [✓] Formatting tanggal (frontend)
+* [✓] Slug untuk kategori (frontend)
+* [✓] ENUM untuk tipe transaksi (contoh: INCOME → Masuk, EXPENSE → Keluar)
+* [ ] Penanganan kondisi data kosong di chart (line & pie chart)
+
+---
+
+### 🐞 Bug & Error Handling
+
+* [ ] Cek dan cari bug (data, chart, dll)
+* [ ] Penanganan error & logging yang rapi
+* [ ] Tangani kondisi error aneh di chart (backend dan frontend)
+* [ ] bugssssss transaksi harian dan bulanan filter data
+
+---
+
+### ⚙️ Backend Improvements
+
+* [ ] Optimasi query transaksi
+* [ ] Refactor ke pola clean architecture
+* [ ] Buat filter untuk transaksi (by bulan, kategori, dsb)
+* [ ] Validasi dan ENUM tipe transaksi (EXPENSE/INCOME)
+* [ ] Validasi input chat telegram user sebelum hit api LLM
+
+---
+
+### 🚀 CI/CD & Testing
+
+* [ ] Implementasi CI/CD (build, lint, test, deploy)
+* [ ] Implementasi unit testing
+
+---
+
+### 📝 Dokumentasi & Perencanaan
+
+* [ ] Catatan daftar fitur yang sudah ada
+* [ ] Rencana fitur selanjutnya (next feature)
+
+---
+
+### 📝 Research & Development
+
+* [ ] Pelajari tokenization & how LLM working (temperature, cache hit & etc)
+
+---

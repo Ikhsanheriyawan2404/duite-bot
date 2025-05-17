@@ -1,0 +1,18 @@
+## example hit const ApiUrl = "https://api.deepseek.com/v1/chat/completions"
+POST https://api.deepseek.com/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer
+
+{
+  "model": "deepseek-chat",
+  "messages": [
+    {
+      "role": "user",
+      "content": "1 + 1 berapa?"
+    }
+  ]
+}
+
+###
+GET https://duite-bot.brogrammer.id/health
+Content-Type: application/json

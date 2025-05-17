@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    container_name: finance-bot
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      LLM_API_KEY: ${LLM_API_KEY}
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ./bot
+    networks:
+      - internal
+
+  db:
+    image: postgres:15
+    container_name: finance-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+
+networks:
+  internal:
+    driver: bridge
