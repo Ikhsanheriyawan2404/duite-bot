@@ -13,7 +13,8 @@ Berikut adalah daftar task kamu yang sudah dirapikan dan dikategorikan agar lebi
 * [✓] Formatting tanggal (frontend)
 * [✓] Slug untuk kategori (frontend)
 * [✓] ENUM untuk tipe transaksi (contoh: INCOME → Masuk, EXPENSE → Keluar)
-* [ ] Penanganan kondisi data kosong di chart (line & pie chart)
+* [✓] Penanganan kondisi data kosong di chart (line & pie chart)
+* [ ] Filter transaksi update rendering element card, pie & line chart, list table transactions)
 
 ---
 
@@ -22,7 +23,7 @@ Berikut adalah daftar task kamu yang sudah dirapikan dan dikategorikan agar lebi
 * [ ] Cek dan cari bug (data, chart, dll)
 * [ ] Penanganan error & logging yang rapi
 * [ ] Tangani kondisi error aneh di chart (backend dan frontend)
-* [ ] bugssssss transaksi harian dan bulanan filter data
+* [✓] bugssssss transaksi harian dan bulanan filter data
 
 ---
 
@@ -31,7 +32,7 @@ Berikut adalah daftar task kamu yang sudah dirapikan dan dikategorikan agar lebi
 * [ ] Optimasi query transaksi
 * [ ] Refactor ke pola clean architecture
 * [ ] Buat filter untuk transaksi (by bulan, kategori, dsb)
-* [ ] Validasi dan ENUM tipe transaksi (EXPENSE/INCOME)
+* [✓] Validasi dan ENUM tipe transaksi (EXPENSE/INCOME)
 * [ ] Validasi input chat telegram user sebelum hit api LLM
 
 ---

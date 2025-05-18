@@ -234,8 +234,8 @@ func main() {
 		}
 		
 		chatID := update.Message.Chat.ID
-		text := update.Message.Text
-		parts := strings.Fields(text)
+		textMessage := update.Message.Text
+		parts := strings.Fields(textMessage)
 		command := parts[0]
 
 		// Kondisi untuk command
@@ -248,22 +248,20 @@ func main() {
 			continue;
 		case "/harian":
 			transactions, _ := service.GetDailyReport(db, chatID)
-			msgText := service.FormatDailyReport(transactions)
-			report := msgText
+			report := service.FormatDailyReport(transactions)
 			msg := telegrambot.NewMessage(chatID, utils.EscapeMarkdown(report))
 			msg.ParseMode = "MarkdownV2"
 			bot.Send(msg)
 			continue;
 		case "/bulanan":
-			transactions, _ := service.GetDailyReport(db, chatID)
-			msgText := service.FormatMonthlyReport(transactions)
-			report := msgText
+			transactions, _ := service.GetMonthlyReport(db, chatID)
+			report := service.FormatMonthlyReport(transactions)
 			msg := telegrambot.NewMessage(chatID, utils.EscapeMarkdown(report))
 			msg.ParseMode = "MarkdownV2"
 			bot.Send(msg)
 			continue;
 		case "/hapus":
-			parts := strings.Fields(text)
+			parts := strings.Fields(textMessage)
 			if len(parts) < 2 {
 				msg := telegrambot.NewMessage(chatID, "Format salah. Gunakan: /hapus {ID transaksi}")
 				bot.Send(msg)
@@ -288,7 +286,7 @@ func main() {
 			bot.Send(msg)
 			continue;
 		case "/daftar":
-			parts := strings.Fields(text)
+			parts := strings.Fields(textMessage)
 			if len(parts) < 2 {
 				msg := telegrambot.NewMessage(chatID, "Format salah. Gunakan: /daftar {nama}")
 				bot.Send(msg)
@@ -319,7 +317,7 @@ func main() {
 			bot.Send(msg)
 			continue;
 		default:
-			if strings.HasPrefix(text, "/") {
+			if strings.HasPrefix(textMessage, "/") {
 				msg := telegrambot.NewMessage(chatID, "❓ Command tidak dikenali. Gunakan /help untuk melihat daftar command.")
 				bot.Send(msg)
 				continue;
@@ -336,7 +334,7 @@ func main() {
 
 		// Klasifikasi prompt & buat transaksi
 		// result, fullResponse, _ := classifyTransaction(update.Message.Text)
-		result, fullResponse, _ := hitChatGpt(text)
+		result, fullResponse, _ := hitChatGpt(textMessage)
 
 		transactionType, err := utils.ParseTransactionType(result.TransactionType)
 		if err != nil {
