@@ -140,8 +140,6 @@ func hitChatGpt(desc string) (*Result, *ChatResponse, error) {
 	var result Result
 	json.Unmarshal([]byte(jsonStr), &result)
 
-	fmt.Println(chatResp)
-	fmt.Println(result)
 	return &result, &chatResp, nil
 }
 
@@ -338,7 +336,7 @@ func main() {
 
 		// Klasifikasi prompt & buat transaksi
 		// result, fullResponse, _ := classifyTransaction(update.Message.Text)
-		result, fullResponse, _ := hitChatGpt(update.Message.Text)
+		result, fullResponse, _ := hitChatGpt(text)
 
 		transactionType, err := utils.ParseTransactionType(result.TransactionType)
 		if err != nil {
@@ -347,13 +345,16 @@ func main() {
 			bot.Send(msg)
 		}
 
+		loc, _ := time.LoadLocation("Asia/Jakarta")
+		jakartaTime := time.Now().In(loc)
+
 		tx := model.Transaction{
 			ChatID: chatID,
 			OriginalText: update.Message.Text,
 			TransactionType: transactionType,
 			Amount: result.Amount,
 			Category: utils.Slugify(result.Category),
-			TransactionDate: time.Now(),
+			TransactionDate: jakartaTime,
 		}
 		
 		db.Create(&tx)
