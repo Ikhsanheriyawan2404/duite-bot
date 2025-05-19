@@ -14,6 +14,7 @@ import (
 
 	"finance-bot/config"
 	"finance-bot/handler"
+	"finance-bot/internal/appcontext"
 	"finance-bot/model"
 	"finance-bot/repository"
 	"finance-bot/service"
@@ -23,8 +24,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/sirupsen/logrus"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -33,8 +32,8 @@ import (
 
 const MaxLimitHit = 10;
 
-var db *gorm.DB
 var log = logrus.New()
+var appCtx *appcontext.AppContext
 
 type ChatMessage struct {
 	Role    string `json:"role"`
@@ -143,27 +142,9 @@ func hitChatGpt(desc string) (*Result, *ChatResponse, error) {
 	return &result, &chatResp, nil
 }
 
-func connectDB() {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		config.AppConfig.DBHost,
-		config.AppConfig.DBUser,
-		config.AppConfig.DBPassword,
-		config.AppConfig.DBName,
-		config.AppConfig.DBPort,
-	)
 
-	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Error("Failed to connect DB:", err)
-	}
 
-	db.AutoMigrate(&model.Transaction{})
-	db.AutoMigrate(&model.User{})
-}
-
-func initializeRestApi() {
+func initializeRestApi(appCtx *appcontext.AppContext) {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
@@ -176,9 +157,8 @@ func initializeRestApi() {
 	api := app.Group("/api")
 	users := api.Group("/users")
 
-	userRepo := repository.NewUserRepository(db)
-    userService := service.NewUserService(userRepo)
-    userHandler := handler.NewUserHandler(userService)
+	
+    userHandler := handler.NewUserHandler(appCtx.UserService)
 
 	users.Get("/:userId", userHandler.GetUser)
 	users.Get("/:userId/transactions", userHandler.GetTransactions)
@@ -210,9 +190,22 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	connectDB()
-	initializeRestApi()
+	db := config.ConnectDB()
 
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+
+	transactionRepo := repository.NewTransactionRepository(db)
+	transactionService := service.NewTransactionService(transactionRepo)
+
+	appCtx = &appcontext.AppContext{
+		UserService:        userService,
+		TransactionService: transactionService,
+		UserStateStore:    make(map[int64]string),
+	}
+
+	initializeRestApi(appCtx)
+	
 	bot, err := telegrambot.NewBotAPI(config.AppConfig.TelegramToken)
 	if err != nil {
         log.Panic(err)
@@ -241,80 +234,42 @@ func main() {
 		// Kondisi untuk command
 		switch command {
 		case "/start":
-			helpText := utils.HelpText
-			msg := telegrambot.NewMessage(chatID, helpText)
-			msg.ParseMode = "Markdown"
+			utils.StartCommand(chatID, bot)
+			continue
+		case "/close":
+			hideMenu := telegrambot.NewRemoveKeyboard(true)
+			msg := telegrambot.NewMessage(chatID, "Menu ditutup. Ketik /start untuk buka kembali.")
+			msg.ReplyMarkup = hideMenu
 			bot.Send(msg)
+			continue
+		case "/bantuan", "🆘Bantuan":
+			utils.HelpCommand(chatID, bot)
+			continue
+		case "/harian", "📆Harian":
+			utils.DailyTransactionCommand(chatID, bot, appCtx.TransactionService)
 			continue;
-		case "/harian":
-			transactions, _ := service.GetDailyReport(db, chatID)
-			report := service.FormatDailyReport(transactions)
-			msg := telegrambot.NewMessage(chatID, utils.EscapeMarkdown(report))
-			msg.ParseMode = "MarkdownV2"
-			bot.Send(msg)
+		case "/bulanan", "📅Bulanan":
+			utils.MonthlyTransactionCommand(chatID, bot, appCtx.TransactionService)
 			continue;
-		case "/bulanan":
-			transactions, _ := service.GetMonthlyReport(db, chatID)
-			report := service.FormatMonthlyReport(transactions)
-			msg := telegrambot.NewMessage(chatID, utils.EscapeMarkdown(report))
-			msg.ParseMode = "MarkdownV2"
-			bot.Send(msg)
+		case "/hapus", "🔥Hapus":
+			if (command == "/hapus") {
+				msg := telegrambot.NewMessage(chatID, "Mohon maaf fitur sedang perbaikan 🙏")
+				bot.Send(msg)
+				continue;
+			}
+			utils.DeleteTransactionCommand(chatID, textMessage, bot, appCtx.TransactionService)
+			continue
+		case "/daftar", "📝Daftar":
+			if (command == "/daftar") {
+				utils.RegisterComand(textMessage, chatID, bot, appCtx.UserService)
+			} else if (command == "📝Daftar") {
+				appCtx.UserStateStore[chatID] = "awaiting_name"
+				msg := telegrambot.NewMessage(chatID, "Silakan ketik nama lengkap kamu untuk daftar:")
+				bot.Send(msg)
+			}
 			continue;
-		case "/hapus":
-			parts := strings.Fields(textMessage)
-			if len(parts) < 2 {
-				msg := telegrambot.NewMessage(chatID, "Format salah. Gunakan: /hapus {ID transaksi}")
-				bot.Send(msg)
-				continue
-			}
-			
-			indexStr := parts[1]
-			transactionId, err := strconv.Atoi(indexStr)
-			if err != nil {
-				msg := telegrambot.NewMessage(chatID, "ID transaksi harus berupa angka.")
-				bot.Send(msg)
-				continue
-			}
-
-			err = service.DeleteTransactionByID(db, uint(transactionId), chatID)
-			if (err != nil) {
-				msg := telegrambot.NewMessage(chatID, "Transaksi tidak ditemukan")
-				bot.Send(msg)
-				continue
-			}
-			msg := telegrambot.NewMessage(chatID, "Transaksi berhasil dihapus!")
-			bot.Send(msg)
-			continue;
-		case "/daftar":
-			parts := strings.Fields(textMessage)
-			if len(parts) < 2 {
-				msg := telegrambot.NewMessage(chatID, "Format salah. Gunakan: /daftar {nama}")
-				bot.Send(msg)
-				continue
-			}
-			userFullName := parts[1]
-
-			user, _ := service.RegisterUser(db, chatID, userFullName)
-			msg := telegrambot.NewMessage(chatID, "Selamat datang " + user.Name)
-			bot.Send(msg)
-			continue;
-		case "/dashboard":
-			userExist := service.CheckUser(db, chatID)
-			if (!userExist) {
-				msg := telegrambot.NewMessage(chatID, "Mohon melakukan daftar terlebih dahulu")
-				bot.Send(msg)
-				continue
-			}
-			msg := telegrambot.NewMessage(chatID, "Klik tombol di bawah untuk membuka dashboard:")
-			msg.ReplyMarkup = telegrambot.InlineKeyboardMarkup{
-				InlineKeyboard: [][]telegrambot.InlineKeyboardButton{
-					{
-						telegrambot.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
-							config.AppConfig.DashboardUrl+"?ref="+utils.EncodeChatID(chatID)),
-					},
-				},
-			}
-			bot.Send(msg)
+		case "/dashboard", "📊Dashboard":
+			utils.DashboardCommand(chatID, bot, appCtx.UserService)
 			continue;
 		default:
 			if strings.HasPrefix(textMessage, "/") {
@@ -324,8 +279,38 @@ func main() {
 			}
 		}
 
+		// Handler untuk listen input user
+		if appCtx.UserStateStore[chatID] == "awaiting_name" {
+			fullName := textMessage
+		
+			user, err := appCtx.UserService.RegisterUser(chatID, fullName)
+			if err != nil {
+				if (strings.Contains(err.Error(), "user sudah terdaftar")) {
+					msg := telegrambot.NewMessage(chatID, "👤 User sudah terdaftar, silakan login.")
+					bot.Send(msg)
+					delete(appCtx.UserStateStore, chatID)
+					continue
+				}
+			}
+		
+			// Hapus state
+			delete(appCtx.UserStateStore, chatID)
+		
+			msg := telegrambot.NewMessage(chatID, fmt.Sprintf("✅ Selamat datang " + user.Name + ", mau lanjut lihat dashboard?"))
+			msg.ReplyMarkup = telegrambot.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegrambot.InlineKeyboardButton{
+					{
+						telegrambot.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
+							config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+					},
+				},
+			}
+			bot.Send(msg)
+			continue
+		}
+
 		// Cek otoritas user
-		countTransactionUser, _ := service.CountTransactionsById(db, chatID)
+		countTransactionUser, _ := appCtx.TransactionService.CountTransactionsById(chatID)
 		if (MaxLimitHit <= countTransactionUser) {
 			msg := telegrambot.NewMessage(chatID, "Maaf anda sudah melebihi limit, hubungi admin di https://t.me/Hirumakun.")
 			bot.Send(msg)
@@ -343,6 +328,7 @@ func main() {
 			bot.Send(msg)
 		}
 
+		// Simpan ke database
 		loc, _ := time.LoadLocation("Asia/Jakarta")
 		jakartaTime := time.Now().In(loc)
 

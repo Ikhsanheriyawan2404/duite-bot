@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -98,4 +99,88 @@ func EscapeMarkdown(text string) string {
 func EncodeChatID(chatID int64) string {
 	chatIDStr := strconv.FormatInt(chatID, 10)
 	return base64.URLEncoding.EncodeToString([]byte(chatIDStr))
+}
+
+func HasTransactionAmount(input string) bool {
+	input = strings.ToLower(input)
+	input = strings.TrimSpace(input)
+
+	// Regex untuk mencari angka dengan satuan lokal (rb, ribu, jt, juta, k, dll)
+	amountRegex := regexp.MustCompile(`(?i)\b\d{1,3}(\.\d{3})*(rb|k|ribu|jt|juta)?\b|\b\d+\b`)
+
+	return amountRegex.MatchString(input)
+}
+
+
+func FormatDailyReport(transactions []model.Transaction) string {
+	var (
+		report       strings.Builder
+		totalOut     float64
+		totalIn      float64
+	)
+
+	report.WriteString("📊 *Laporan Hari Ini*\n")
+
+	for _, tx := range transactions {
+		var transactionType string
+		if tx.TransactionType == "EXPENSE" {
+			transactionType = "🔴"
+		} else if tx.TransactionType == "INCOME" {
+			transactionType = "🟢"
+		}
+
+		formatAmount := FormatRupiah(tx.Amount)
+
+		line := fmt.Sprintf("#%d %s %s %s\n", tx.ID, transactionType, formatAmount, tx.OriginalText)
+		report.WriteString(line)
+
+		if tx.TransactionType == "EXPENSE" {
+			totalOut += tx.Amount
+		} else if tx.TransactionType == "INCOME" {
+			totalIn += tx.Amount
+		}
+	}
+
+	report.WriteString("\n")
+	report.WriteString(fmt.Sprintf("🟢 Total Pemasukan: %s\n", FormatRupiah(totalIn)))
+	report.WriteString(fmt.Sprintf("🔴 Total Pengeluaran: %s\n", FormatRupiah(totalOut)))
+
+	return report.String()
+}
+
+func FormatMonthlyReport(transactions []model.Transaction) string {
+	var (
+		report       strings.Builder
+		totalOut     float64
+		totalIn      float64
+	)
+
+	report.WriteString("📆 *Laporan Bulan Ini*\n")
+
+	for _, tx := range transactions {
+		var transactionType string
+		if tx.TransactionType == "EXPENSE" {
+			transactionType = "🔴"
+		} else if tx.TransactionType == "INCOME" {
+			transactionType = "🟢"
+		}
+
+		formatAmount := FormatRupiah(tx.Amount)
+		formatDate := FormatDate(tx.TransactionDate)
+
+		line := fmt.Sprintf("#%d %s %s  %s %s\n", tx.ID, transactionType, formatDate, formatAmount, tx.OriginalText)
+		report.WriteString(line)
+
+		if tx.TransactionType == "EXPENSE" {
+			totalOut += tx.Amount
+		} else if tx.TransactionType == "INCOME" {
+			totalIn += tx.Amount
+		}
+	}
+
+	report.WriteString("\n")
+	report.WriteString(fmt.Sprintf("🟢 Total Pemasukan: %s\n", FormatRupiah(totalIn)))
+	report.WriteString(fmt.Sprintf("🔴 Total Pengeluaran: %s\n", FormatRupiah(totalOut)))
+
+	return report.String()
 }
