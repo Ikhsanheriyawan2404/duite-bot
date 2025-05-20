@@ -4,7 +4,7 @@ const WelcomeText = `👋 Hai, selamat datang di Duite Bot
 Siap bantu kamu catat pengeluaran harian dengan cepat dan tanpa ribet.
 
 Cukup kirim pesan seperti ini:
-➡️ Makan siang 25k
+➡️ Makan siang 25k atau beli motor 20 mei 2025
 
 Bot akan langsung menyimpan transaksi kamu secara otomatis! 🔥`
 
@@ -21,17 +21,18 @@ Berikut adalah command yang tersedia:
 /bantuan - Bantuan informasi
 `
 
-const PromptDefault = `Analisis deskripsi transaksi berikut:
-Deskripsi: "%s"
+const PromptDefault = `Analisa deskripsi transaksi berikut: "%s
 
-Ekstrak informasi:
-1. Tipe transaksi (INCOME/EXPENSE)
-2. Nilai transaksi
-3. Kategori transaksi (bahasa indonesia)
+Ekstrak:
+1. type INCOME atau EXPENSE
+2. amount angka rupiah
+3. category transaksi ringkas (Indonesia)
+4. date tanggal (format YYYY-MM-DD), atau null
 
-Hanya respon dengan format JSON:
+Balas hanya JSON:
 {
 	"type": "INCOME|EXPENSE",
 	"amount": number,
-	"category": "string"
+	"category": string
+	"date": "YYYY-MM-DD" | null
 }`

@@ -63,6 +63,7 @@ type Result struct {
 	TransactionType string `json:"type"`
 	Amount float64 `json:"amount"`
 	Category string `json:"category"`
+	Date string `json:"date"`
 }
 
 func classifyTransaction(desc string) (*Result, *ChatResponse, error) {
@@ -334,13 +335,19 @@ func main() {
 		// loc, _ := time.LoadLocation("Asia/Jakarta")
 		// jakartaTime := time.Now().In(loc)
 
+		transactionDate := time.Now()		
+		if (result.Date != "") {
+			layout := "2006-01-02"
+			transactionDate, _ = time.Parse(layout, result.Date)	
+		}
+
 		tx := model.Transaction{
 			ChatID: chatID,
-			OriginalText: update.Message.Text,
+			OriginalText: textMessage,
 			TransactionType: transactionType,
 			Amount: result.Amount,
 			Category: utils.Slugify(result.Category),
-			TransactionDate: time.Now(),
+			TransactionDate: transactionDate,
 		}
 		
 		db.Create(&tx)
