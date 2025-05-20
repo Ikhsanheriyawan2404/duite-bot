@@ -5,7 +5,7 @@ FROM golang:1.22-alpine AS builder
 WORKDIR /app
 
 # Install git only if needed for modules
-RUN apk add --no-cache git ca-certificates \
+RUN apk add --no-cache git ca-certificates tzdata \
  && update-ca-certificates 2>/dev/null || true \
  && addgroup -S appgroup && adduser -S appuser -G appgroup
 

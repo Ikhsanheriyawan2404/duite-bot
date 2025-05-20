@@ -231,54 +231,6 @@ func main() {
 		parts := strings.Fields(textMessage)
 		command := parts[0]
 
-		// Kondisi untuk command
-		switch command {
-		case "/start":
-			utils.StartCommand(chatID, bot)
-			continue
-		case "/close":
-			hideMenu := telegrambot.NewRemoveKeyboard(true)
-			msg := telegrambot.NewMessage(chatID, "Menu ditutup. Ketik /start untuk buka kembali.")
-			msg.ReplyMarkup = hideMenu
-			bot.Send(msg)
-			continue
-		case "/bantuan", "🆘Bantuan":
-			utils.HelpCommand(chatID, bot)
-			continue
-		case "/harian", "📆Harian":
-			utils.DailyTransactionCommand(chatID, bot, appCtx.TransactionService)
-			continue;
-		case "/bulanan", "📅Bulanan":
-			utils.MonthlyTransactionCommand(chatID, bot, appCtx.TransactionService)
-			continue;
-		case "/hapus", "🔥Hapus":
-			if (command == "/hapus") {
-				msg := telegrambot.NewMessage(chatID, "Mohon maaf fitur sedang perbaikan 🙏")
-				bot.Send(msg)
-				continue;
-			}
-			utils.DeleteTransactionCommand(chatID, textMessage, bot, appCtx.TransactionService)
-			continue
-		case "/daftar", "📝Daftar":
-			if (command == "/daftar") {
-				utils.RegisterComand(textMessage, chatID, bot, appCtx.UserService)
-			} else if (command == "📝Daftar") {
-				appCtx.UserStateStore[chatID] = "awaiting_name"
-				msg := telegrambot.NewMessage(chatID, "Silakan ketik nama lengkap kamu untuk daftar:")
-				bot.Send(msg)
-			}
-			continue;
-		case "/dashboard", "📊Dashboard":
-			utils.DashboardCommand(chatID, bot, appCtx.UserService)
-			continue;
-		default:
-			if strings.HasPrefix(textMessage, "/") {
-				msg := telegrambot.NewMessage(chatID, "❓ Command tidak dikenali. Gunakan /help untuk melihat daftar command.")
-				bot.Send(msg)
-				continue;
-			}
-		}
-
 		// Handler untuk listen input user
 		if appCtx.UserStateStore[chatID] == "awaiting_name" {
 			fullName := textMessage
@@ -309,6 +261,56 @@ func main() {
 			continue
 		}
 
+		// Kondisi untuk command
+		switch command {
+		case "/start":
+			utils.StartCommand(chatID, bot)
+			continue
+		case "/close":
+			hideMenu := telegrambot.NewRemoveKeyboard(true)
+			msg := telegrambot.NewMessage(chatID, "Menu ditutup. Ketik /start untuk buka kembali.")
+			msg.ReplyMarkup = hideMenu
+			bot.Send(msg)
+			continue
+		case "/bantuan", "🆘Bantuan":
+			utils.HelpCommand(chatID, bot)
+			continue
+		case "/harian", "📆Harian":
+			utils.DailyTransactionCommand(chatID, bot, appCtx.TransactionService)
+			continue;
+		case "/bulanan", "📅Bulanan":
+			utils.MonthlyTransactionCommand(chatID, bot, appCtx.TransactionService)
+			continue;
+		case "/hapus", "🔥Hapus":
+			if (command == "🔥Hapus") {
+				msg := telegrambot.NewMessage(chatID, "Mohon maaf fitur sedang perbaikan 🙏")
+				bot.Send(msg)
+				continue;
+			}
+			utils.DeleteTransactionCommand(chatID, textMessage, bot, appCtx.TransactionService)
+			continue
+		case "/daftar", "📝Daftar":
+			if (command == "/daftar") {
+				utils.RegisterComand(textMessage, chatID, bot, appCtx.UserService)
+			} else if (command == "📝Daftar") {
+				appCtx.UserStateStore[chatID] = "awaiting_name"
+				msg := telegrambot.NewMessage(chatID, "Silakan ketik nama lengkap kamu untuk daftar:")
+				bot.Send(msg)
+			}
+			continue;
+		case "/dashboard", "📊Dashboard":
+			utils.DashboardCommand(chatID, bot, appCtx.UserService)
+			continue;
+		default:
+			if strings.HasPrefix(textMessage, "/") {
+				msg := telegrambot.NewMessage(chatID, "❓ Command tidak dikenali. Gunakan /help untuk melihat daftar command.")
+				bot.Send(msg)
+				continue;
+			}
+		}
+
+
+
 		// Cek otoritas user
 		countTransactionUser, _ := appCtx.TransactionService.CountTransactionsById(chatID)
 		if (MaxLimitHit <= countTransactionUser) {
@@ -329,8 +331,8 @@ func main() {
 		}
 
 		// Simpan ke database
-		loc, _ := time.LoadLocation("Asia/Jakarta")
-		jakartaTime := time.Now().In(loc)
+		// loc, _ := time.LoadLocation("Asia/Jakarta")
+		// jakartaTime := time.Now().In(loc)
 
 		tx := model.Transaction{
 			ChatID: chatID,
@@ -338,7 +340,7 @@ func main() {
 			TransactionType: transactionType,
 			Amount: result.Amount,
 			Category: utils.Slugify(result.Category),
-			TransactionDate: jakartaTime,
+			TransactionDate: time.Now(),
 		}
 		
 		db.Create(&tx)
