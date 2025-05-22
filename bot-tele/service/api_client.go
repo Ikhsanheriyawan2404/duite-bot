@@ -41,8 +41,6 @@ func (c *APIClient) Request(method string, path string, reqBody any, result any)
 
 	// Build full URL
 	fullURL := fmt.Sprintf("%s%s", c.BaseURL, path)
-	fmt.Println("Request Bash:",  c.BaseURL)
-	fmt.Println("Request URL:", fullURL)
 
 	// Create HTTP request
 	req, err := http.NewRequest(method, fullURL, body)
@@ -58,16 +56,16 @@ func (c *APIClient) Request(method string, path string, reqBody any, result any)
 	}
 	defer resp.Body.Close()
 
-	// Check for HTTP error status
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("bad status: %d", resp.StatusCode)
-	}
-
 	// Decode response into result
 	if result != nil {
 		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 			return fmt.Errorf("failed to decode response: %w", err)
 		}
+	}
+
+	// Check for HTTP error status
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("bad status: %d", resp.StatusCode)
 	}
 
 	return nil

@@ -54,7 +54,7 @@ func main() {
 
 	users.Post("/register", userHandler.RegisterUser)
 	// users.Get("/:userId", userHandler.GetUser)
-	users.Get("/:userId/exists", userHandler.CheckUser)
+	users.Get("/:chatId/exists", userHandler.CheckUser)
 	// users.Get("/:userId/transactions", userHandler.GetTransactions)
 	
 	users.Get("/:chatId/transactions/daily", userHandler.GetDailyReport)

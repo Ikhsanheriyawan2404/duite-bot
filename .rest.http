@@ -49,8 +49,13 @@ Authorization: Bearer
 }
 
 ###
-GET http://localhost:8080/users/11131652151/transactions/daily
+DELETE http://localhost:8080/users/1131652151/transactions/43
 Content-Type: application/json
 
+###
+POST http://localhost:8080/users/1131652151/transactions/ai-classify
+Content-Type: application/json
 
-
+{
+  "prompt": "1 + 1 = ?",
+}

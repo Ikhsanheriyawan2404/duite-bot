@@ -1,10 +1,14 @@
+version: '3.8'
+
 services:
-  app:
-    build: .
-    container_name: duite-bot
+  bot-tele:
+    build:
+      context: ./bot-tele
+    container_name: bot-tele
     restart: unless-stopped
     depends_on:
       - db
+      - redis
     environment:
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
       LLM_API_KEY: ${LLM_API_KEY}
@@ -13,18 +17,51 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
-    ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - .:/app
+      - ./bot-tele:/app
     working_dir: /app
     command: ./bot
     networks:
       - internal
 
+  bot-wa:
+    build:
+      context: ./bot-wa
+    container_name: bot-wa
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+
+  core-api:
+    build:
+      context: ./core-api
+    container_name: core-api
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "${CORE_API_PORT}:${CORE_API_PORT}"
+    volumes:
+      - ./core-api:/app
+    working_dir: /app
+    command: ./start-api
+    networks:
+      - internal
+
   db:
     image: postgres:15
-    container_name: finance-db
+    container_name: duote-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -32,6 +69,13 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: redis:7
+    container_name: duite-redis
+    restart: unless-stopped
     networks:
       - internal
 

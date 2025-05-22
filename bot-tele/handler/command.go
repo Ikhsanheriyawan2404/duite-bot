@@ -136,6 +136,11 @@ func handleMonthlyReport(chatID int64, bot *tgbotapi.BotAPI) {
 }
 
 func handleDeleteTransaction(chatID int64, inputMessage string, bot *tgbotapi.BotAPI) {
+	type Response struct {
+		Message string `json:"message"`
+	}
+	var response Response
+
 	parts := strings.Fields(inputMessage)
 	if len(parts) < 2 {
 		msg := tgbotapi.NewMessage(chatID, "Format salah. Gunakan: /hapus {ID transaksi}")
@@ -151,18 +156,9 @@ func handleDeleteTransaction(chatID int64, inputMessage string, bot *tgbotapi.Bo
 		return
 	}
 
-	var transactions []model.Transaction
 	endpoint := fmt.Sprintf("/users/%d/transactions/%d", chatID, transactionId)
-	service.Client.Request("GET", endpoint, nil, &transactions)
-	// if err != nil {
-	// 	log.Println("Error:", err)
-	// }
-	// if (err != nil) {
-	// 	msg := tgbotapi.NewMessage(chatID, "Transaksi tidak ditemukan")
-	// 	bot.Send(msg)
-	// 	return
-	// }
-	msg := tgbotapi.NewMessage(chatID, "Transaksi berhasil dihapus!")
+	err = service.Client.Request("DELETE", endpoint, nil, &response)
+	msg := tgbotapi.NewMessage(chatID, response.Message)
 	bot.Send(msg)
 }
 
@@ -174,7 +170,7 @@ func handleRegister(chatID int64, inputMessage string, bot *tgbotapi.BotAPI) {
 		return
 	}
 
-	userFullName := parts[1]
+	userFullName := strings.Join(parts[1:], " ")
 	reqBody := map[string]any{
 		"chat_id": chatID,
 		"name":    userFullName,
@@ -182,24 +178,35 @@ func handleRegister(chatID int64, inputMessage string, bot *tgbotapi.BotAPI) {
 	var user model.User
 	err := service.Client.Request("POST", "/users/register", reqBody, &user)
 	if err != nil {
-		log.Println("Failed to register user:", err)
+		msg := tgbotapi.NewMessage(chatID, "Anda sudah terdaftar")
+		bot.Send(msg)
+		return
 	}
 	msg := tgbotapi.NewMessage(chatID, "✅ Selamat datang " + user.Name + ", mau lanjut lihat dashboard?")
+	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{
+				tgbotapi.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
+					config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+			},
+		},
+	}
 	bot.Send(msg)
 }
 
 func handleDashboard(chatID int64, bot *tgbotapi.BotAPI) {
-	var user model.User
-	err := service.Client.Request("GET", "/users/%d/exists", nil, &user)
-	if err != nil {
-		log.Println("Failed to register user:", err)
+	type UserExistResponse struct {
+		Exist bool `json:"exist"`
 	}
 
-	// if (!user) {
-	// 	msg := tgbotapi.NewMessage(chatID, "Mohon melakukan daftar terlebih dahulu")
-	// 	bot.Send(msg)
-	// 	return
-	// }
+	var res UserExistResponse
+	url := fmt.Sprintf("/users/%d/exists", chatID)
+	service.Client.Request("GET", url, nil, &res)
+	if !res.Exist {
+		msg := tgbotapi.NewMessage(chatID, "Yuk, daftar dulu biar bisa lanjut")
+		bot.Send(msg)
+		return
+	}
 
 	msg := tgbotapi.NewMessage(chatID, "Klik tombol di bawah untuk membuka dashboard:")
 	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
@@ -215,11 +222,12 @@ func handleDashboard(chatID int64, bot *tgbotapi.BotAPI) {
 
 func handleTransactionInput(chatID int64, inputMessage string, bot *tgbotapi.BotAPI) {
 	// 1. Kirim permintaan ke LLM API
+	fullPrompt := fmt.Sprintf(static.PromptDefault, inputMessage)
 	var llmResp LLMResult
 	err := service.Client.Request(
 		"POST",
 		fmt.Sprintf("/users/%d/transactions/ai-classify", chatID),
-		map[string]string{"prompt": inputMessage}, // request body
+		map[string]string{"prompt": fullPrompt}, // request body
 		&llmResp,
 	)
 

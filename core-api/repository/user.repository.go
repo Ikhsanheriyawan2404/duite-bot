@@ -79,7 +79,9 @@ func (r *userRepository) GetDailyReport(chatID int64) ([]model.Transaction, erro
 	tomorrow := today.Add(24 * time.Hour)        // 00:00:00 besok
 
 	var transactions []model.Transaction
-	err := r.db.Where("chat_id = ? AND transaction_date >= ? AND transaction_date < ?", chatID, today, tomorrow).
+	err := r.db.
+		Select("id", "chat_id", "amount", "category", "transaction_date", "original_text", "transaction_type").
+		Where("chat_id = ? AND transaction_date >= ? AND transaction_date < ?", chatID, today, tomorrow).
 		Order("transaction_date asc").
 		Find(&transactions).Error
 
@@ -92,7 +94,9 @@ func (r *userRepository) GetMonthlyReport(chatID int64) ([]model.Transaction, er
 	startOfNextMonth := startOfMonth.AddDate(0, 1, 0)
 
 	var transactions []model.Transaction
-	err := r.db.Where("chat_id = ? AND transaction_date >= ? AND transaction_date < ?", chatID, startOfMonth, startOfNextMonth).
+	err := r.db.
+		Select("id", "chat_id", "amount", "category", "transaction_date", "original_text", "transaction_type").
+		Where("chat_id = ? AND transaction_date >= ? AND transaction_date < ?", chatID, startOfMonth, startOfNextMonth).
 		Order("transaction_date asc").
 		Find(&transactions).Error
 

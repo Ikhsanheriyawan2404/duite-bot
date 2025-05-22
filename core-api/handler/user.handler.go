@@ -187,94 +187,64 @@ func (h *UserHandler) DeleteTransactionByID(c *fiber.Ctx) error {
 
 	err := h.userService.DeleteTransactionByID(uint(transactionId), chatId)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to delete transaction",
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Transaksi tidak ditemukan",
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Transaction deleted successfully",
+		"message": "Transaksi berhasil dihapus",
 	})
 }
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
-	type RegisterRequest struct {
+	var request struct {
 		ChatID int64  `json:"chat_id"`
 		Name   string `json:"name"`
 	}
 
-	var req RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
+	c.BodyParser(&request)
 
-	if req.ChatID == 0 || req.Name == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Chat ID and name are required",
-		})
-	}
-
-	user, err := h.userService.RegisterUser(req.ChatID, req.Name)
+	user, err := h.userService.RegisterUser(request.ChatID, request.Name)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to register user",
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"success": true,
-		"data":    user,
-	})
+	return c.Status(fiber.StatusCreated).JSON(user)
 }
 
 func (h *UserHandler) CheckUser(c *fiber.Ctx) error {
 	idParam := c.Params("chatId")
-	chatId, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid chat ID",
+	chatId, _ := strconv.ParseInt(idParam, 10, 64)
+
+	exist := h.userService.CheckUser(chatId)
+	if (! exist) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"exist": exist,
 		})
 	}
-
-	exists := h.userService.CheckUser(chatId)
 	return c.JSON(fiber.Map{
-		"exists": exists,
+		"exist": exist,
 	})
 }
 
 func (h *UserHandler) AIClassifyTransaction(c *fiber.Ctx) error {
 	chatIdParam := c.Params("chatId")
-	chatId, err := strconv.ParseInt(chatIdParam, 10, 64)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid chat ID",
-		})
-	}
-
+	chatId, _ := strconv.ParseInt(chatIdParam, 10, 64)
+	
 	var input struct {
 		Prompt string `json:"prompt"`
 	}
-	if err := c.BodyParser(&input); err != nil || input.Prompt == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Prompt is required",
-		})
-	}
+	
+	c.BodyParser(&input);
 
-	// Gunakan fungsi classifyTransaction()
-	result, llmResp, err := hitChatGpt(input.Prompt)
+	result, llmResp, err := classifyTransaction(input.Prompt)
+	// result, llmResp, err := hitChatGpt(input.Prompt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengklasifikasi transaksi",
-		})
-	}
-
-	// Validasi hasil LLM (opsional)
-	if result.TransactionType == "" || result.Category == "" || result.Amount == 0 {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"error": "Hasil klasifikasi tidak valid",
-			"llm_raw": llmResp.Choices[0].Message.Content,
 		})
 	}
 
