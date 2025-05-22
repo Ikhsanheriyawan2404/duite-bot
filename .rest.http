@@ -48,4 +48,9 @@ Authorization: Bearer
   "store": true
 }
 
+###
+GET http://localhost:8080/users/11131652151/transactions/daily
+Content-Type: application/json
+
+
 

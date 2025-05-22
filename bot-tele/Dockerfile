@@ -15,7 +15,7 @@ RUN go mod download
 
 # Copy kode sumber, build binary statically
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o bot main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o bot cmd/main.go
 
 # 2. Runtime Stage
 FROM scratch

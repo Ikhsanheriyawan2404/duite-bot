@@ -2,15 +2,14 @@ package utils
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
-
-	"finance-bot/model"
+	
+	"bot-tele/model"
 )
 
 
@@ -51,25 +50,6 @@ func FormatRupiah(amount float64) string {
 	}
 
 	return "Rp" + strings.Join(result, ".")
-}
-
-func FormatTransactionType(tipe string) (string, error) {
-	if tipe == string(model.EXPENSE) {
-		return "Keluar", nil
-	} else if tipe == string(model.INCOME) {
-        return "Masuk", nil
-    }
-
-    return "", errors.New("invalid transaction type")
-}
-
-func ParseTransactionType(t string) (model.TransactionType, error) {
-	switch t {
-	case string(model.INCOME), string(model.EXPENSE):
-		return model.TransactionType(t), nil
-	default:
-		return "", errors.New("invalid transaction type")
-	}
 }
 
 func EscapeMarkdown(text string) string {

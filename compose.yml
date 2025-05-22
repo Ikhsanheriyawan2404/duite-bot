@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: finance-bot
+    container_name: duite-bot
     restart: unless-stopped
     depends_on:
       - db

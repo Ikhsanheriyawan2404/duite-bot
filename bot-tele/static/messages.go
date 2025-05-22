@@ -1,4 +1,4 @@
-package utils
+package static
 
 const WelcomeText = `👋 Hai, selamat datang di Duite Bot  
 Siap bantu kamu catat pengeluaran harian dengan cepat dan tanpa ribet.
@@ -20,6 +20,12 @@ Berikut adalah command yang tersedia:
 /dashboard - Lihat Dashboard
 /bantuan - Bantuan informasi
 `
+
+const (
+	ErrorMessage = "Terjadi kesalahan saat menghubungi server."
+	CloseMenuText = "Menu ditutup. Gunakan /start untuk membuka kembali menu."
+	WrongCommandText = "❓ Command tidak dikenali. Gunakan /help untuk melihat daftar command."
+)
 
 const PromptDefault = `Analisa deskripsi transaksi berikut: "%s
 
