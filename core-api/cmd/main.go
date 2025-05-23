@@ -5,7 +5,10 @@ import (
 	"finance-bot/handler"
 	"finance-bot/repository"
 	"finance-bot/service"
+	"finance-bot/middleware"
+	
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -42,6 +45,9 @@ func main() {
         AllowOrigins: "*",
         AllowHeaders: "Origin, Content-Type, Accept",
     }))
+
+	// Apply to all routes (1 requests per 6 seconds)
+	app.Use(limiter.RateLimiterMiddleware(60, 60*time.Second))
 
 	app.Static("/", "./public")
 		
