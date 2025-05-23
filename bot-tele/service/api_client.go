@@ -15,17 +15,11 @@ type APIClient struct {
 	Client  *http.Client
 }
 
-var Client *APIClient
-
 func NewAPIClient() *APIClient {
 	return &APIClient{
 		BaseURL: config.AppConfig.CoreApiUrl,
 		Client:  &http.Client{},
 	}
-}
-
-func InitClient() {
-	Client = NewAPIClient()
 }
 
 func (c *APIClient) Request(method string, path string, reqBody any, result any) error {

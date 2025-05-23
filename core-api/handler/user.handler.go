@@ -240,8 +240,8 @@ func (h *UserHandler) AIClassifyTransaction(c *fiber.Ctx) error {
 	
 	c.BodyParser(&input);
 
-	result, llmResp, err := classifyTransaction(input.Prompt)
-	// result, llmResp, err := hitChatGpt(input.Prompt)
+	// result, llmResp, err := hitDeepSeek(input.Prompt)
+	result, llmResp, err := hitChatGpt(input.Prompt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Gagal mengklasifikasi transaksi",
@@ -255,8 +255,7 @@ func (h *UserHandler) AIClassifyTransaction(c *fiber.Ctx) error {
 	})
 }
 
-func classifyTransaction(desc string) (*Result, *ChatResponse, error) {
-	prompt := desc
+func hitDeepSeek(prompt string) (*Result, *ChatResponse, error) {
 
 	requestBody := ChatRequest{
 		Model: "deepseek-chat",
@@ -266,7 +265,6 @@ func classifyTransaction(desc string) (*Result, *ChatResponse, error) {
 		ResponseFormat: map[string]any{ 
 			"type": "json_object",
 		},
-		// MaxTokens: 50,
 	}
 
 	jsonBody, _ := json.Marshal(requestBody)
@@ -292,9 +290,7 @@ func classifyTransaction(desc string) (*Result, *ChatResponse, error) {
 	return &result, &chatResp, err
 }
 
-func hitChatGpt(desc string) (*Result, *ChatResponse, error) {
-
-	prompt := desc
+func hitChatGpt(prompt string) (*Result, *ChatResponse, error) {
 
 	client := openai.NewClient(
 		option.WithAPIKey(config.AppConfig.LLMApiKey), // Gantilah dengan API key Anda

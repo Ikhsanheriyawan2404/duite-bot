@@ -53,9 +53,7 @@ func main() {
 	transactions := app.Group("/transactions")
 
 	users.Post("/register", userHandler.RegisterUser)
-	// users.Get("/:userId", userHandler.GetUser)
 	users.Get("/:chatId/exists", userHandler.CheckUser)
-	// users.Get("/:userId/transactions", userHandler.GetTransactions)
 	
 	users.Get("/:chatId/transactions/daily", userHandler.GetDailyReport)
 	users.Get("/:chatId/transactions/monthly", userHandler.GetMonthlyReport)

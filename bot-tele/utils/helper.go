@@ -2,13 +2,14 @@ package utils
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
-	
+
 	"bot-tele/model"
 )
 
@@ -35,7 +36,6 @@ func FormatDate(date time.Time) string {
 	return fmt.Sprintf("%s/%s/%s", day, month, year)
 }
 
-
 func FormatRupiah(amount float64) string {
 	number := fmt.Sprintf("%.0f", amount)
 
@@ -51,6 +51,8 @@ func FormatRupiah(amount float64) string {
 
 	return "Rp" + strings.Join(result, ".")
 }
+
+
 
 func EscapeMarkdown(text string) string {
 	replacer := strings.NewReplacer(
@@ -91,6 +93,14 @@ func HasTransactionAmount(input string) bool {
 	return amountRegex.MatchString(input)
 }
 
+func ParseTransactionType(t string) (model.TransactionType, error) {
+	switch t {
+	case string(model.INCOME), string(model.EXPENSE):
+		return model.TransactionType(t), nil
+	default:
+		return "", errors.New("invalid transaction type")
+	}
+}
 
 func FormatDailyReport(transactions []model.Transaction) string {
 	var (
