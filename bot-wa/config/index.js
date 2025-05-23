@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const appEnv = process.env.APP_ENV || 'development';
 
 const envPath = appEnv === 'production'
-  ? path.resolve(__dirname, '.env')
+  ? path.resolve(process.cwd(), '.env')
   : path.resolve(__dirname, '../../.env');
 
 dotenv.config({ path: envPath });

@@ -5,7 +5,7 @@ const path = require('path');
 const { config } = require('./config') 
 const { WelcomeText, HelpText, ErrorMessage, WrongCommandText, PromptText } = require('./static');
 const { getDailyTransaction, registerUser, checkUser, getMonthlyTransaction, hitAiClassifyTransaction, saveTransaction } = require('./api-client');
-const { formatDailyReport, formatRupiah, slugify, translateTransactionType, formatMonthlyReport } = require('./utils');
+const { formatDailyReport, formatRupiah, slugify, formatMonthlyReport } = require('./utils');
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(path.resolve('./sessions'));

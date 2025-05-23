@@ -1,24 +1,17 @@
-version: '3.8'
-
 services:
   bot-tele:
     build:
       context: ./bot-tele
     container_name: bot-tele
     restart: unless-stopped
+    environment:
+      APP_ENV: production
     depends_on:
       - db
       - redis
-    environment:
-      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      LLM_API_KEY: ${LLM_API_KEY}
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_PORT: ${DB_PORT}
     volumes:
       - ./bot-tele:/app
+      - ./.env:/app/.env
     working_dir: /app
     command: ./bot
     networks:
@@ -29,9 +22,16 @@ services:
       context: ./bot-wa
     container_name: bot-wa
     restart: unless-stopped
+    environment:
+      APP_ENV: production
     depends_on:
       - db
       - redis
+    volumes:
+      - ./bot-wa:/app
+      - ./.env:/app/.env
+    working_dir: /app
+    command: node index.js
     networks:
       - internal
 
@@ -40,11 +40,14 @@ services:
       context: ./core-api
     container_name: core-api
     restart: unless-stopped
+    environment:
+      APP_ENV: production
     depends_on:
       - db
       - redis
     volumes:
       - ./core-api:/app
+      - ./.env:/app/.env
     working_dir: /app
     command: ./start-api
     networks:
@@ -52,7 +55,7 @@ services:
 
   db:
     image: postgres:15
-    container_name: duote-db
+    container_name: duite-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -76,3 +79,4 @@ volumes:
 networks:
   internal:
     driver: bridge
+  
