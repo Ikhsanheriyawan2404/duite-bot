@@ -2,6 +2,11 @@
 ENV ?= development
 APP_ENV := $(ENV)
 
+# Docker Compose file
+COMPOSE_FILE=compose.yml
+COMPOSE_DEV=docker-compose.override.yml
+COMPOSE_PROD=docker-compose.prod.yml
+
 # Jalankan bot-wa dengan mode env yang sesuai
 run-bot-wa:
 	@echo "Running bot-wa in $(ENV) mode..."
@@ -29,11 +34,20 @@ else
 	@cd core-api && APP_ENV=$(APP_ENV) go run cmd/main.go
 endif
 
-# Docker Compose untuk production
 up:
+ifeq ($(ENV),production)
 	@echo "📦 Bringing up production stack..."
-	docker compose up -d --build
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) up -d --build
+else
+	@echo "📦 Bringing up development stack..."
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) up -d --build
+endif
 
 down:
+ifeq ($(ENV),production)
 	@echo "🛑 Tearing down production stack..."
-	docker compose down
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) down
+else
+	@echo "🛑 Tearing down development stack..."
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) down
+endif

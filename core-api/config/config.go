@@ -30,7 +30,7 @@ func LoadConfig(path string) error {
 	viper.AutomaticEnv()        // read in environment variables that match
 
 	// Set defaults
-	viper.SetDefault("SERVER_PORT", "8080")
+	viper.SetDefault("SERVER_PORT", "80")
 
 	// Read config file
 	if err := viper.ReadInConfig(); err != nil {

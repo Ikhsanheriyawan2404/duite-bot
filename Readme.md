@@ -14,7 +14,9 @@ cp .env.example .env
 You're lucky, just do this and shut up:
 
 ```bash
-make up
+make ENV=production up
+or
+make up // for development
 ```
 
 ### If You Don’t Have a Makefile

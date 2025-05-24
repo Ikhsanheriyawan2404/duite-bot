@@ -59,3 +59,18 @@ Content-Type: application/json
 {
   "prompt": "1 + 1 = ?",
 }
+
+###
+POST http://localhost:8080/users/register
+Content-Type: application/json
+
+{
+  "chat_id": 12345678,
+  "name": "IkhsanJH"
+}
+
+###
+GET http://localhost:8080/users/62821170881423/transactions/daily
+Content-Type: application/json
+
+

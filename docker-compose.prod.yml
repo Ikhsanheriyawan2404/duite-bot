@@ -1,0 +1,3 @@
+services:
+  core-api:
+    ports: []  # no exposed port in production

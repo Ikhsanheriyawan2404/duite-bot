@@ -15,7 +15,7 @@ RUN go mod download
 
 # Copy kode sumber, build binary statically
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o core-api cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o gateway main.go
 
 # 2. Runtime Stage
 FROM scratch
@@ -27,8 +27,8 @@ COPY --from=builder /etc/passwd /etc/passwd
 USER appuser
 
 # Copy binary dari builder
-COPY --from=builder /app/core-api /core-api
+COPY --from=builder /app/gateway /gateway
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Jalankan binary
-ENTRYPOINT ["/core-api"]
+ENTRYPOINT ["/gateway"]

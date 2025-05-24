@@ -123,7 +123,7 @@
   <script type="module">
     class Config {
       constructor() {
-        this.baseUrl = 'https://duite-bot.brogrammer.id/api';
+        this.baseUrl = window.location.origin + '/api';
       }
 
       getUrl(endpoint) {
