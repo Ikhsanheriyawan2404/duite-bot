@@ -1,0 +1,24 @@
+services:
+  bot-tele:
+    build:
+      context: ./bot-tele
+    environment:
+      APP_ENV: production
+
+  bot-wa:
+    build:
+      context: ./bot-wa
+    environment:
+      APP_ENV: production
+
+  core-api:
+    build:
+      context: ./core-api
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    environment:
+      APP_ENV: production
+    
+  gateway:
+    build:
+      context: ./gateway

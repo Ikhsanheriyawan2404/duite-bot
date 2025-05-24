@@ -48,4 +48,29 @@ Authorization: Bearer
   "store": true
 }
 
+###
+DELETE http://localhost:8080/users/1131652151/transactions/43
+Content-Type: application/json
+
+###
+POST http://localhost:9000/users/6282117088123/transactions/ai-classify
+Content-Type: application/json
+
+{
+  "prompt": "beli jajan cilok 101k"
+}
+
+###
+POST http://localhost:9000/users/register
+Content-Type: application/json
+
+{
+  "chat_id": 12345678,
+  "name": "IkhsanJH"
+}
+
+###
+GET http://localhost:9000/users/62821170881423/transactions/daily
+Content-Type: application/json
+
 

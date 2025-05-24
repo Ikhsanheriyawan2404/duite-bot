@@ -1,30 +1,73 @@
 services:
-  app:
-    build: .
-    container_name: finance-bot
+  bot-tele:
+    container_name: bot-tele
     restart: unless-stopped
-    depends_on:
-      - db
-    environment:
-      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      LLM_API_KEY: ${LLM_API_KEY}
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_PORT: ${DB_PORT}
-    ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - .:/app
+      - ./bot-tele:/app
+      - ./.env:/app/.env
     working_dir: /app
     command: ./bot
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+
+  bot-wa:
+    container_name: bot-wa
+    restart: unless-stopped
+    volumes:
+      - ./bot-wa:/app
+      - ./.env:/app/.env
+    working_dir: /app
+    command: node index.js
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+
+  core-api:
+    build:
+      context: ./core-api
+    container_name: core-api
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./core-api:/app
+      - ./.env:/app/.env
+    working_dir: /app
+    command: ./core-api
+    networks:
+      - internal
+  
+  gateway:
+    build:
+      context: ./gateway
+    container_name: gateway
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./gateway:/app
+      - ./.env:/app/.env
+    working_dir: /app
+    command: ./gateway
     networks:
       - internal
 
   db:
     image: postgres:15
-    container_name: finance-db
+    container_name: duite-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -32,6 +75,13 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: redis:7
+    container_name: duite-redis
+    restart: unless-stopped
     networks:
       - internal
 
