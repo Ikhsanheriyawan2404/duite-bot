@@ -1,3 +1,10 @@
+# Docker registry
+REGISTRY ?= ikhsan123
+TAG ?= latest
+
+# Daftar service yang akan di-build dan push
+SERVICES = bot-tele bot-wa core-api gateway
+
 # Default ENV mode
 ENV ?= development
 APP_ENV := $(ENV)
@@ -6,6 +13,20 @@ APP_ENV := $(ENV)
 COMPOSE_FILE=compose.yml
 COMPOSE_DEV=docker-compose.override.yml
 COMPOSE_PROD=docker-compose.prod.yml
+
+build-images:
+	@echo "🔧 Building Docker images for $(ENV) environment..."
+	@for service in $(SERVICES); do \
+		echo "🔨 Building $$service..."; \
+		docker build -t $(REGISTRY)/$$service:$(TAG) ./$$service; \
+	done
+
+push-images:
+	@echo "🚀 Pushing Docker images to registry $(REGISTRY)..."
+	@for service in $(SERVICES); do \
+		echo "📤 Pushing $(REGISTRY)/$$service:$(TAG)..."; \
+		docker push $(REGISTRY)/$$service:$(TAG); \
+	done
 
 # Jalankan bot-wa dengan mode env yang sesuai
 run-bot-wa:

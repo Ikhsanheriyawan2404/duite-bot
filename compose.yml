@@ -1,37 +1,29 @@
 services:
   bot-tele:
-    build:
-      context: ./bot-tele
     container_name: bot-tele
     restart: unless-stopped
-    environment:
-      APP_ENV: production
-    depends_on:
-      - db
-      - redis
     volumes:
       - ./bot-tele:/app
       - ./.env:/app/.env
     working_dir: /app
     command: ./bot
+    depends_on:
+      - db
+      - redis
     networks:
       - internal
 
   bot-wa:
-    build:
-      context: ./bot-wa
     container_name: bot-wa
     restart: unless-stopped
-    environment:
-      APP_ENV: production
-    depends_on:
-      - db
-      - redis
     volumes:
       - ./bot-wa:/app
       - ./.env:/app/.env
     working_dir: /app
     command: node index.js
+    depends_on:
+      - db
+      - redis
     networks:
       - internal
 
@@ -99,4 +91,3 @@ volumes:
 networks:
   internal:
     driver: bridge
-  

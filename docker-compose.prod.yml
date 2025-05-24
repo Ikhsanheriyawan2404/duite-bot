@@ -1,3 +1,22 @@
 services:
+  bot-tele:
+    image: ikhsan123/bot-tele:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+
+  bot-wa:
+    image: ikhsan123/bot-wa:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+
   core-api:
-    ports: []  # no exposed port in production
+    image: ikhsan123/core-api:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+    ports: [] # No exposed ports in production
+
+  gateway:
+    image: ikhsan123/gateway:latest
