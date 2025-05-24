@@ -8,25 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"bot-tele/model"
 )
-
-
-func Slugify(s string) string {
-    s = strings.ToLower(s)
-    var b strings.Builder
-    for _, r := range s {
-        if unicode.IsLetter(r) || unicode.IsNumber(r) {
-            b.WriteRune(r)
-        } else if unicode.IsSpace(r) || r == '-' {
-            b.WriteRune('-')
-        }
-        // abaikan karakter lain
-    }
-    return strings.Trim(b.String(), "-")
-}
 
 func FormatDate(date time.Time) string {
 	day := date.Format("02")

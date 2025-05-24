@@ -79,10 +79,20 @@ const hitAiClassifyTransaction = async (phoneNumber, prompt) => {
     });
     return response.data;
   } catch (error) {
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+
+      if (status >= 400 && status < 500) {
+        return data; // kirim response error dari server sebagai hasil
+      }
+    }
+
     console.error(error.message);
     throw error;
   }
 };
+
 
 const saveTransaction = async (transaction) => {
   try {

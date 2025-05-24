@@ -53,15 +53,15 @@ DELETE http://localhost:8080/users/1131652151/transactions/43
 Content-Type: application/json
 
 ###
-POST http://localhost:8080/users/1131652151/transactions/ai-classify
+POST http://localhost:9000/users/6282117088123/transactions/ai-classify
 Content-Type: application/json
 
 {
-  "prompt": "1 + 1 = ?",
+  "prompt": "beli jajan cilok 101k"
 }
 
 ###
-POST http://localhost:8080/users/register
+POST http://localhost:9000/users/register
 Content-Type: application/json
 
 {
@@ -70,7 +70,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8080/users/62821170881423/transactions/daily
+GET http://localhost:9000/users/62821170881423/transactions/daily
 Content-Type: application/json
 
 

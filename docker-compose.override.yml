@@ -14,8 +14,8 @@ services:
   core-api:
     build:
       context: ./core-api
-    # ports:
-    #   - "${SERVER_PORT}:${SERVER_PORT}"
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
     environment:
       APP_ENV: production
     

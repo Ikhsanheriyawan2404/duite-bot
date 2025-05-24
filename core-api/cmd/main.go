@@ -33,11 +33,11 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
-    userHandler := handler.NewUserHandler(userService)
 
 	transactionRepo := repository.NewTransactionRepository(db)
 	transactionService := service.NewTransactionService(transactionRepo)
-	transactionHandler := handler.NewTransactionHandler(transactionService)
+
+    userHandler := handler.NewUserHandler(userService, transactionService)
 
 	app := fiber.New()
 
@@ -46,7 +46,7 @@ func main() {
         AllowHeaders: "Origin, Content-Type, Accept",
     }))
 
-	// Apply to all routes (1 requests per 6 seconds)
+	// Apply to all routes (1 requests per 1 seconds)
 	app.Use(limiter.RateLimiterMiddleware(60, 60*time.Second))
 		
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -54,8 +54,6 @@ func main() {
 	})
 	
 	users := app.Group("/users")
-	transactions := app.Group("/transactions")
-
 	
 	users.Post("/register", userHandler.RegisterUser)
 	
@@ -67,9 +65,7 @@ func main() {
 	users.Get("/:chatId/transactions/monthly", userHandler.GetMonthlyReport)
 	users.Delete("/:chatId/transactions/:transactionId", userHandler.DeleteTransactionByID)
 	
-	users.Post("/:chatId/transactions/ai-classify", userHandler.AIClassifyTransaction)
-	
-	transactions.Post("/", transactionHandler.CreateTransaction)
+	users.Post("/:chatId/transactions/ai-classify", userHandler.ParseAndSaveTransaction)
 
 	serverAddr := "0.0.0.0:" + config.AppConfig.ServerPort
 	if err := app.Listen(serverAddr); err != nil {

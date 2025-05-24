@@ -5,12 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"finance-bot/config"
+	"finance-bot/model"
 	"finance-bot/service"
+	"finance-bot/utils"
+	"finance-bot/static"
+
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/openai/openai-go"
@@ -51,10 +57,14 @@ type Result struct {
 
 type UserHandler struct {
 	userService service.UserService
+	transactionService service.TransactionService
 }
 
-func NewUserHandler(userService service.UserService) *UserHandler {
-	return &UserHandler{userService}
+func NewUserHandler(userService service.UserService, transactionService service.TransactionService) *UserHandler {
+	return &UserHandler{
+		userService:        userService,
+		transactionService: transactionService,
+	}
 }
 
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
@@ -230,28 +240,80 @@ func (h *UserHandler) CheckUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *UserHandler) AIClassifyTransaction(c *fiber.Ctx) error {
+func (h *UserHandler) ParseAndSaveTransaction(c *fiber.Ctx) error {
 	chatIdParam := c.Params("chatId")
 	chatId, _ := strconv.ParseInt(chatIdParam, 10, 64)
-	
+
 	var input struct {
 		Prompt string `json:"prompt"`
 	}
-	
-	c.BodyParser(&input);
 
-	// result, llmResp, err := hitDeepSeek(input.Prompt)
-	result, llmResp, err := hitChatGpt(input.Prompt)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Gagal mengklasifikasi transaksi",
+	if err := c.BodyParser(&input); err != nil || input.Prompt == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Prompt is required",
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"chat_id": chatId,
-		"result":  result,
+	if !utils.ContainsNominal(input.Prompt) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": `📌 Coba ketik seperti ini:
+	➡️ Makan siang 20k  
+	➡️ Gaji masuk 20 Mei
+	
+	Aku bakal bantu catat otomatis transaksi kamu! ✨`,
+			"help": "Contoh: 'Makan siang 25k' atau 'gaji masuk 1000'",
+		})
+	}	
+
+	// Step 1: Klasifikasi menggunakan LLM
+	fullPrompt := fmt.Sprintf(static.PromptDefault, input.Prompt)
+	result, llmResp, err := hitChatGpt(fullPrompt)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
+		})
+	}
+
+	// Step 2: Validasi hasil klasifikasi
+	if result.TransactionType != string(model.INCOME) && result.TransactionType != string(model.EXPENSE) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
+		})
+	}
+
+	var transactionDate time.Time
+	if result.Date != "" {
+		parsedDate, err := time.Parse(time.RFC3339, result.Date)
+		if err != nil {
+			transactionDate = time.Now() // fallback ke sekarang jika parsing gagal
+		} else {
+			transactionDate = parsedDate
+		}
+	} else {
+		transactionDate = time.Now() // jika kosong, fallback ke sekarang
+	}
+	
+	// Step 3: Simpan transaksi
+	tx := &model.Transaction{
+		ChatID:          chatId,
+		OriginalText:    input.Prompt,
+		TransactionType: model.TransactionType(result.TransactionType),
+		Amount:          result.Amount,
+		Category:        utils.Slugify(result.Category),
+		TransactionDate: transactionDate,
+	}
+
+	if err := h.transactionService.CreateTransaction(tx); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal menyimpan transaksi",
+		})
+	}
+
+	// Step 4: Respon sukses
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "Transaksi berhasil disimpan",
 		"usage":   llmResp.Usage,
+		"data":    tx,
 	})
 }
 

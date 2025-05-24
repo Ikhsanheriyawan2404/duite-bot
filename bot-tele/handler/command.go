@@ -7,7 +7,6 @@ import (
 	"bot-tele/service"
 	"bot-tele/static"
 	"bot-tele/utils"
-	"time"
 
 	"fmt"
 	"log"
@@ -131,16 +130,14 @@ func handleDeleteTransaction(chatID int64, inputMessage string, bot *tgbotapi.Bo
 
 	parts := strings.Fields(inputMessage)
 	if len(parts) < 2 {
-		msg := tgbotapi.NewMessage(chatID, "Format salah. Gunakan: /hapus {ID transaksi}")
-		bot.Send(msg)
+		bot.Send(tgbotapi.NewMessage(chatID, "⚠️ Format salah nih! Coba ketik kayak gini:\n`/hapus 123`"))
 		return
 	}
 	
 	indexStr := parts[1]
 	transactionId, err := strconv.Atoi(indexStr)
 	if err != nil {
-		msg := tgbotapi.NewMessage(chatID, "ID transaksi harus berupa angka.")
-		bot.Send(msg)
+		bot.Send(tgbotapi.NewMessage(chatID, "🧠 ID transaksi harus berupa angka yaa."))
 		return
 	}
 
@@ -210,69 +207,49 @@ func handleDashboard(chatID int64, bot *tgbotapi.BotAPI, apiClient *service.APIC
 }
 
 func handleTransactionInput(chatID int64, inputMessage string, bot *tgbotapi.BotAPI, apiClient *service.APIClient) {
-	// Kirim permintaan ke LLM API
-	fullPrompt := fmt.Sprintf(static.PromptDefault, inputMessage)
+	// Kirim permintaan ke API klasifikasi & penyimpanan transaksi sekaligus
+	reqBody := map[string]string{
+		"prompt": inputMessage,
+	}
 
-	var llmResp model.LLMResult
+	var apiResponse struct {
+		Message string           `json:"message"`
+		Usage   any              `json:"usage"`
+		Data    model.Transaction `json:"data"`
+		Error   string             `json:"error,omitempty"` // opsional, bisa kosong
+	}
+
 	err := apiClient.Request(
 		"POST",
 		fmt.Sprintf("/users/%d/transactions/ai-classify", chatID),
-		map[string]string{"prompt": fullPrompt}, // request body
-		&llmResp,
+		reqBody,
+		&apiResponse,
 	)
 
+	
+
 	if err != nil {
-		log.Println("Gagal memanggil API klasifikasi:", err)
-		bot.Send(tgbotapi.NewMessage(chatID, "Terjadi kesalahan saat memproses pesanmu."))
+		if apiResponse.Error != "" {
+			bot.Send(tgbotapi.NewMessage(chatID, fmt.Sprintf("❌ %s", apiResponse.Error)))
+			return
+		}
+		// Balas error dari API langsung ke Telegram
+		log.Println("❌ Gagal memproses transaksi:", err)
+		bot.Send(tgbotapi.NewMessage(chatID, fmt.Sprintf("⚠️ %s", err.Error())))
 		return
 	}
 
-	transactionType, err := utils.ParseTransactionType(llmResp.Result.TransactionType)
-	if err != nil {
-		msg := tgbotapi.NewMessage(chatID, "Transaksi gagal dibuat!")
-		bot.Send(msg)
-	}
-
-	transactionDate := time.Now()		
-	if (llmResp.Result.Date != "") {
-		layout := "2006-01-02"
-		transactionDate, _ = time.Parse(layout, llmResp.Result.Date)	
-	}
-
-	// save ke database
-	reqTransaction := model.TransactionDto{
-		ChatID:          chatID,
-		OriginalText:    inputMessage,
-		TransactionType: transactionType,
-		Amount:          llmResp.Result.Amount,
-		Category:        utils.Slugify(llmResp.Result.Category),
-		TransactionDate: transactionDate,
-	}
-
-	var saveResult map[string]any
-	err = apiClient.Request(
-		"POST",
-		"/transactions",
-		reqTransaction,
-		&saveResult,
-	)
-
-	if err != nil {
-		log.Println("❌ Gagal menyimpan transaksi:", err)
-		bot.Send(tgbotapi.NewMessage(chatID, "Gagal menyimpan transaksi ke sistem."))
-		return
-	}
-
-	// Format hasil klasifikasi
+	// Format dan kirim balasan ke Telegram
 	reply := fmt.Sprintf(
-		"✅ Transaksi berhasil dicatat!\n\n📂 Tipe: %s\n💰 Jumlah: %s\n🏷️ Kategori: %s\n",
-		transactionType,
-		utils.FormatRupiah(llmResp.Result.Amount),
-		llmResp.Result.Category,
+		"✅ Transaksi berhasil dicatat!\n\n📂 Tipe: %s\n💰 Jumlah: %s\n🏷️ Kategori: %s\n🗓️ Tanggal: %s",
+		apiResponse.Data.TransactionType,
+		utils.FormatRupiah(apiResponse.Data.Amount),
+		apiResponse.Data.Category,
+		apiResponse.Data.TransactionDate.Format("2006-01-02"),
 	)
 
-	// Kirim balasan ke Telegram
 	msg := tgbotapi.NewMessage(chatID, reply)
 	bot.Send(msg)
 }
+
 

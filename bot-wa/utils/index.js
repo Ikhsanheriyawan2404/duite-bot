@@ -70,6 +70,16 @@ const slugify = (text) => {
     .replace(/-+/g, '-');          // hapus tanda hubung dobel
 }
 
+function encodeChatID(chatID) {
+  // Konversi chatID ke string
+  const chatIDStr = chatID.toString();
+  // Encode ke base64 dengan standar URL-safe
+  return Buffer.from(chatIDStr, 'utf-8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
 function translateTransactionType(type) {
   if (type === 'INCOME') return 'Pemasukan';
   if (type === 'EXPENSE') return 'Pengeluaran';
@@ -92,4 +102,5 @@ module.exports = {
   slugify,
   translateTransactionType,
   formatDate,
+  encodeChatID
 }
