@@ -13,7 +13,7 @@ var (
 
 func InitRedis() {
 	Client = redis.NewClient(&redis.Options{
-		Addr:     AppConfig.DBHost + ":6379",
+		Addr:     AppConfig.RedisHost + ":6379",
 		Password: "",
 		DB:       0,
 	})
