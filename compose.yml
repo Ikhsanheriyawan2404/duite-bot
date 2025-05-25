@@ -28,8 +28,6 @@ services:
       - internal
 
   core-api:
-    build:
-      context: ./core-api
     container_name: core-api
     restart: unless-stopped
     environment:
@@ -46,8 +44,6 @@ services:
       - internal
   
   gateway:
-    build:
-      context: ./gateway
     container_name: gateway
     restart: unless-stopped
     environment:
