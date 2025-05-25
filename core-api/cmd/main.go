@@ -30,6 +30,7 @@ func main() {
 	}
 	
 	db := config.ConnectDB()
+	config.InitRedis()
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
