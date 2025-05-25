@@ -17,6 +17,8 @@ type Config struct {
 	DBPassword     string `mapstructure:"DB_PASSWORD"`
 	DBName         string `mapstructure:"DB_NAME"`
 
+	RedisHost         string `mapstructure:"REDIS_HOST"`
+
 	LLMApiUrl 	   string `mapstructure:"LLM_API_URL"`
 }
 
@@ -58,6 +60,7 @@ func LoadConfig(path string) error {
 		{"DB_USER", AppConfig.DBUser},
 		{"DB_PASSWORD", AppConfig.DBPassword},
 		{"DB_NAME", AppConfig.DBName},
+		{"REDIS_HOST", AppConfig.RedisHost},
 	}
 
 	for _, req := range required {

@@ -10,7 +10,7 @@ var (
 	Ctx = context.Background()
 
 	Client = redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     AppConfig.DBHost + ":6379",
 		Password: "",
 		DB:       0,
 	})

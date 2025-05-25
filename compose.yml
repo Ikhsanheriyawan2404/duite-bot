@@ -52,8 +52,8 @@ services:
     restart: unless-stopped
     environment:
       APP_ENV: production
-    ports:
-      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    # ports:
+    #   - "${GATEWAY_PORT}:${GATEWAY_PORT}"
     depends_on:
       - db
       - redis

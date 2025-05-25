@@ -12,6 +12,23 @@ import (
 	"bot-tele/model"
 )
 
+var validCommands = map[string]bool{
+	"/start":     true,
+	"/close":     true,
+	"/bantuan":   true,
+	"🆘Bantuan":   true,
+	"/harian":    true,
+	"📆Harian":    true,
+	"/bulanan":   true,
+	"📅Bulanan":   true,
+	"/hapus":     true,
+	"🔥Hapus":     true,
+	"/daftar":    true,
+	"📝Daftar":    true,
+	"/dashboard": true,
+	"📊Dashboard": true,
+}
+
 func FormatDate(date time.Time) string {
 	day := date.Format("02")
 	month := date.Format("01")
@@ -157,4 +174,18 @@ func FormatMonthlyReport(transactions []model.Transaction) string {
 	report.WriteString(fmt.Sprintf("🔴 Total Pengeluaran: %s\n", FormatRupiah(totalOut)))
 
 	return report.String()
+}
+
+func IsCommand(input string) bool {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return false
+	}
+
+	// Ambil kata pertama saja
+	parts := strings.Fields(input)
+	firstWord := parts[0]
+
+	_, isValid := validCommands[firstWord]
+	return isValid
 }

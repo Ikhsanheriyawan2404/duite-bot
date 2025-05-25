@@ -16,6 +16,10 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var appCtx = &model.AppContext{
+    UserStateStore: make(map[int64]string),
+}
+
 func HandleCommandAndInput(update tgbotapi.Update, bot *tgbotapi.BotAPI, apiClient *service.APIClient) {
 	chatID := update.Message.Chat.ID
 	inputMessage := update.Message.Text
@@ -24,6 +28,16 @@ func HandleCommandAndInput(update tgbotapi.Update, bot *tgbotapi.BotAPI, apiClie
 		return
 	}
 	command := parts[0]
+	
+	if !utils.IsCommand(inputMessage) {
+		state := appCtx.UserStateStore[chatID]
+		if state != "" {
+			handleUserStateInput(chatID, inputMessage, bot, apiClient)
+			return
+		}
+	} else {
+		delete(appCtx.UserStateStore, chatID)
+	}
 
 	switch command {
 	case "/start":
@@ -38,18 +52,38 @@ func HandleCommandAndInput(update tgbotapi.Update, bot *tgbotapi.BotAPI, apiClie
 		handleMonthlyReport(chatID, bot, apiClient)
 	case "/hapus", "🔥Hapus":
 		if (command == "🔥Hapus") {
-			msg := tgbotapi.NewMessage(chatID, "Oopsie! Fitur ini lagi ngambek 😅 Sabar ya, lagi dibenerin dulu~")
+			appCtx.UserStateStore[chatID] = "awaiting_transaction_id"
+			msg := tgbotapi.NewMessage(chatID, "💥 Kirim ID transaksi yang mau kamu hapus, biar aku bantu hapuskan.")
 			bot.Send(msg)
 			return
 		}
+
+		parts := strings.Fields(inputMessage)
+		if len(parts) < 2 {
+			bot.Send(tgbotapi.NewMessage(chatID, "⚠️ Format salah nih! Coba ketik kayak gini:\n`/hapus 123`"))
+			return
+		}
+
+		inputMessage = parts[1]
+
 		handleDeleteTransaction(chatID, inputMessage, bot, apiClient)
 		return
 	case "/daftar", "📝Daftar":
 		if (command == "📝Daftar") {
-			msg := tgbotapi.NewMessage(chatID, "Oopsie! Fitur ini lagi ngambek 😅 Sabar ya, lagi dibenerin dulu~")
+			appCtx.UserStateStore[chatID] = "awaiting_register_name"
+			msg := tgbotapi.NewMessage(chatID, "📝 Ketik nama lengkap kamu ya, biar aku bisa daftarin.")
 			bot.Send(msg)
 			return
 		}
+
+		if len(parts) < 2 {
+			msg := tgbotapi.NewMessage(chatID, "Waduuhh, kamu belum isi nama nih 😅\nCoba ketik kayak gini ya:\n👉 /daftar Udin Andria")
+			bot.Send(msg)
+			return
+		}
+
+		inputMessage = strings.Join(parts[1:], " ")
+
 		handleRegister(chatID, inputMessage, bot, apiClient)
 	case "/dashboard", "📊Dashboard":
 		handleDashboard(chatID, bot, apiClient)
@@ -127,14 +161,8 @@ func handleDeleteTransaction(chatID int64, inputMessage string, bot *tgbotapi.Bo
 		Message string `json:"message"`
 	}
 	var response Response
-
-	parts := strings.Fields(inputMessage)
-	if len(parts) < 2 {
-		bot.Send(tgbotapi.NewMessage(chatID, "⚠️ Format salah nih! Coba ketik kayak gini:\n`/hapus 123`"))
-		return
-	}
 	
-	indexStr := parts[1]
+	indexStr := inputMessage
 	transactionId, err := strconv.Atoi(indexStr)
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "🧠 ID transaksi harus berupa angka yaa."))
@@ -148,14 +176,7 @@ func handleDeleteTransaction(chatID int64, inputMessage string, bot *tgbotapi.Bo
 }
 
 func handleRegister(chatID int64, inputMessage string, bot *tgbotapi.BotAPI, apiClient *service.APIClient) {
-	parts := strings.Fields(inputMessage)
-	if len(parts) < 2 {
-		msg := tgbotapi.NewMessage(chatID, "Waduuhh, kamu belum isi nama nih 😅\nCoba ketik kayak gini ya:\n👉 /daftar Udin Andria")
-		bot.Send(msg)
-		return
-	}
-
-	userFullName := strings.Join(parts[1:], " ")
+	userFullName := inputMessage
 	reqBody := map[string]any{
 		"chat_id": chatID,
 		"name":    userFullName,
@@ -164,6 +185,14 @@ func handleRegister(chatID int64, inputMessage string, bot *tgbotapi.BotAPI, api
 	err := apiClient.Request("POST", "/users/register", reqBody, &user)
 	if err != nil {
 		msg := tgbotapi.NewMessage(chatID, "Eh, btw kamu udah daftar sebelumnya, hehe")
+		msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+				{
+					tgbotapi.NewInlineKeyboardButtonURL("📊 Mau aku bantu lihat dashboard?",
+						config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+				},
+			},
+		}
 		bot.Send(msg)
 		return
 	}
@@ -251,5 +280,21 @@ func handleTransactionInput(chatID int64, inputMessage string, bot *tgbotapi.Bot
 	msg := tgbotapi.NewMessage(chatID, reply)
 	bot.Send(msg)
 }
+
+func handleUserStateInput(chatID int64, inputMessage string, bot *tgbotapi.BotAPI, apiClient *service.APIClient) {
+	state := appCtx.UserStateStore[chatID]
+
+	switch state {
+	case "awaiting_register_name":
+		handleRegister(chatID, inputMessage, bot, apiClient)
+		delete(appCtx.UserStateStore, chatID)
+		return
+	case "awaiting_transaction_id":
+		handleDeleteTransaction(chatID, inputMessage, bot, apiClient)
+		delete(appCtx.UserStateStore, chatID)
+		return
+	}
+}
+
 
 
