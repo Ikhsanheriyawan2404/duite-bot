@@ -269,8 +269,8 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 
 	// Step 1: Klasifikasi menggunakan LLM
 	fullPrompt := fmt.Sprintf(static.PromptDefault, time.Now().Format("2006-01-02"), input.Prompt)
-	result, llmResp, err := hitDeepSeek(fullPrompt)
-	// result, llmResp, err := hitChatGpt(fullPrompt)
+	// result, llmResp, err := hitDeepSeek(fullPrompt)
+	result, llmResp, err := hitChatGpt(fullPrompt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
