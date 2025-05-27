@@ -17,7 +17,7 @@ Aku bisa bantu kamu dengan perintah-perintah berikut:
 /start - Aku akan membukakan menu untukmu
 /harian - Aku akan tampilkan laporan transaksi hari ini
 /bulanan - Aku akan tunjukkan laporan transaksi bulan ini
-/hapus - Aku bisa hapus data transaksimu, cukup kirim: hapus (ID transaksi), contoh: hapus 123
+/hapus - Aku bisa hapus data transaksimu, cukup kirim: /hapus (ID transaksi), contoh: /hapus 123
 /daftar - Aku akan daftarkan akunmu supaya bisa lihat dashboard
 /dashboard - Aku akan tampilkan Dashboard kamu
 /bantuan / help - Aku akan kirimkan informasi bantuan seperti ini

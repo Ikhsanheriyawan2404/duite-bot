@@ -256,18 +256,21 @@ func (h *UserHandler) ParseAndSaveTransaction(c *fiber.Ctx) error {
 
 	if !utils.ContainsNominal(input.Prompt) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": `📌 Coba ketik seperti ini:
-	➡️ Makan siang 20k  
-	➡️ Gaji masuk 20 Mei
-	
-	Aku bakal bantu catat otomatis transaksi kamu! ✨`,
+			"error": `📌 Coba ketik gini:
+➡️ Makan siang 20k  
+
+Gampang banget kan? ✨
+Kalau butuh bantuan lainnya, tinggal ketik bantuan yaa~
+Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
+
 			"help": "Contoh: 'Makan siang 25k' atau 'gaji masuk 1000'",
 		})
 	}	
 
 	// Step 1: Klasifikasi menggunakan LLM
-	fullPrompt := fmt.Sprintf(static.PromptDefault, input.Prompt)
-	result, llmResp, err := hitChatGpt(fullPrompt)
+	fullPrompt := fmt.Sprintf(static.PromptDefault, time.Now().Format("2006-01-02"), input.Prompt)
+	result, llmResp, err := hitDeepSeek(fullPrompt)
+	// result, llmResp, err := hitChatGpt(fullPrompt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
@@ -283,12 +286,8 @@ func (h *UserHandler) ParseAndSaveTransaction(c *fiber.Ctx) error {
 
 	var transactionDate time.Time
 	if result.Date != "" {
-		parsedDate, err := time.Parse(time.RFC3339, result.Date)
-		if err != nil {
-			transactionDate = time.Now() // fallback ke sekarang jika parsing gagal
-		} else {
-			transactionDate = parsedDate
-		}
+		parsedDate, _ := time.Parse("2006-01-02", result.Date)
+		transactionDate = parsedDate
 	} else {
 		transactionDate = time.Now() // jika kosong, fallback ke sekarang
 	}
@@ -299,7 +298,7 @@ func (h *UserHandler) ParseAndSaveTransaction(c *fiber.Ctx) error {
 		OriginalText:    input.Prompt,
 		TransactionType: model.TransactionType(result.TransactionType),
 		Amount:          result.Amount,
-		Category:        utils.Slugify(result.Category),
+		Category:        result.Category,
 		TransactionDate: transactionDate,
 	}
 

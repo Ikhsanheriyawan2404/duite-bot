@@ -51,7 +51,11 @@
 
 ### 🔬 Research & Development
 
-* [ ] Pelajari tokenization & cara kerja LLM (temperature, cache hit, dll)
+* [✓] Pelajari tokenization & cara kerja LLM (temperature, cache hit, dll)
+🔹 Temperature
+Temperature rendah (0–0.3): output lebih deterministik (konsisten).
+Tinggi (0.7–1): lebih kreatif, cocok untuk konten generatif, tidak cocok untuk ekstraksi data.
+
 * [ ] Perbandingan model: ChatGPT (rate limit) vs DeepSeek (no rate limit, kompetitif)
 * [ ] Efisiensi token input bahasa Inggris vs Bahasa Indonesia, output tetap Bahasa Indonesia
 

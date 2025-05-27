@@ -141,7 +141,7 @@ async function startBot() {
             return;
           }
 
-          const { type, amount, category, date } = result.data;
+          const { type, amount, category, transaction_date } = result.data;
 
           let replyLines = [
             '✅ Siap, transaksi kamu udah ke-record! 🎉',
@@ -151,8 +151,8 @@ async function startBot() {
             `🏷️ Kategori : ${category}`
           ];
 
-          if (date) {
-            replyLines.push(`🗓️ Tanggal  : ${date}`);
+          if (transaction_date) {
+            replyLines.push(`🗓️ Tanggal  : ${transaction_date}`);
           }
 
           const reply = replyLines.join('\n');

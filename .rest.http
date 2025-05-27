@@ -8,7 +8,7 @@ Authorization: Bearer
   "messages": [
     {
       "role": "user",
-      "content": "Analisa deskripsi transaksi berikut: beli kue ultah  100k\nEkstrak:\n1. type INCOME atau EXPENSE\n2. amount angka rupiah\n3. category transaksi ringkas (Indonesia)\n4. time: tanggal (format YYYY-MM-DD), atau null\n\nBalas hanya JSON:\n{\n\t\"type\": \"INCOME|EXPENSE\",\n\t\"amount\": number,\n\t\"category\": string,\n\t\"time\": \"YYYY-MM-DD\" | null\n}"
+      "content": "Current date is: 2025-05-26\n\nAnalyze the following transaction description:\nsaya beli motor kemaren insya Allah senilai 3jt500k\n\nInterpret any relative time expressions based on the current date above.\n\nExtract and reply in JSON format only:\n{\n\t\"type\": \"INCOME|EXPENSE\",\n\t\"amount\": number,\n\t\"category\": string,\n\t\"date\": \"YYYY-MM-DD\" or null\n}\n\nUse one of these categories:\n- Makanan & Minuman\n- Transportasi\n- Belanja\n- Tagihan & Utilitas\n- Pendidikan\n- Kesehatan\n- Hiburan\n- Donasi & Sosial\n- Perawatan Diri\n- Cicilan / Kredit\n- Pajak & Retribusi\n- Investasi & Tabungan\n- Biaya Rumah Tangga\n- Biaya Anak\n- Hewan Peliharaan\n- Lain-lain\n- Gaji / Pendapatan Tetap\n- Bisnis / Dagang\n- Investasi\n- Hadiah / Hibah\n- Penjualan Aset\n- Pengembalian Uang\n- Lain-lain\n\nOutput must be in Bahasa Indonesia."
     }
   ]
 }
@@ -30,7 +30,7 @@ Authorization: Bearer
       "content": [
         {
           "type": "input_text",
-          "text": "Analisa deskripsi transaksi berikut: beli kue ultah 19-02-2019 100k\nEkstrak:\n1. type INCOME atau EXPENSE\n2. amount angka rupiah\n3. category transaksi ringkas (Indonesia)\n4. time: tanggal (format YYYY-MM-DD), atau null\n\nBalas hanya JSON:\n{\n\t\"type\": \"INCOME|EXPENSE\",\n\t\"amount\": number,\n\t\"category\": string,\n\t\"time\": \"YYYY-MM-DD\" | null\n}"
+          "text": "Current date is: 2025-05-26\n\nAnalyze the following transaction description:\nsaya motor insya allah besok senilai 3jt500rb\n\nInterpret any relative time expressions based on the current date above.\n\nExtract and reply in JSON format only:\n{\n\t\"type\": \"INCOME|EXPENSE\",\n\t\"amount\": number,\n\t\"category\": string,\n\t\"date\": \"YYYY-MM-DD\" or null\n}\n\nUse one of these categories:\n- Makanan & Minuman\n- Transportasi\n- Belanja\n- Tagihan & Utilitas\n- Pendidikan\n- Kesehatan\n- Hiburan\n- Donasi & Sosial\n- Perawatan Diri\n- Cicilan / Kredit\n- Pajak & Retribusi\n- Investasi & Tabungan\n- Biaya Rumah Tangga\n- Biaya Anak\n- Hewan Peliharaan\n- Lain-lain\n- Gaji / Pendapatan Tetap\n- Bisnis / Dagang\n- Investasi\n- Hadiah / Hibah\n- Penjualan Aset\n- Pengembalian Uang\n- Lain-lain\n\nOutput must be in Bahasa Indonesia."
         }
       ]
     }
