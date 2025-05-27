@@ -48,7 +48,7 @@ const formatMonthlyReport = (transactions) => {
     }
 
     const formattedAmount = formatRupiah(tx.amount);
-    report += `#${tx.id} ${transactionType} ${formattedAmount} ${tx.original_text}\n`;
+    report += `#${tx.id} ${formatDate(tx.transaction_date)} ${transactionType} ${formattedAmount} ${tx.original_text}\n`;
   });
 
   report += "\n";
