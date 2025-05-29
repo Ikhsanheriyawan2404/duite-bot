@@ -86,7 +86,7 @@ async function startBot() {
           const id = args[0]; // transactionId
           if (id) {
             try {
-              const res = await deleteTransaction(userId, id); // userId sebagai chatId
+              const res = await deleteTransaction(senderNumber, id); // userId sebagai chatId
               await sock.sendMessage(from, { text: res.message });
             } catch (err) {
               const message = err.response?.data?.message || '❌ Gagal hapus transaksi. Coba lagi ya!';
