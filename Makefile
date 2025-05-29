@@ -28,6 +28,12 @@ push-images:
 		docker push $(REGISTRY)/$$service:$(TAG); \
 	done
 
+pull-images:
+	@echo "📥 Pulling latest images (exclude db, redis)..."
+	@for service in $(SERVICES); do \
+		docker pull $(REGISTRY)/$$service:$(TAG); \
+	done
+
 # Jalankan bot-wa dengan mode env yang sesuai
 run-bot-wa:
 	@echo "Running bot-wa in $(ENV) mode..."
@@ -62,7 +68,8 @@ ifeq ($(ENV),production)
 		docker image rm $(REGISTRY)/$$service:$(TAG) || true; \
 	done
 	@echo "📦 Bringing up production stack..."
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) up -d --pull always
+	make pull-images
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) up -d
 else
 	@echo "📦 Bringing up development stack..."
 	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) up -d --build
