@@ -4,8 +4,8 @@ const qrcode = require('qrcode-terminal');
 const path = require('path');
 const { config } = require('./config') 
 const { WelcomeText, HelpText, ErrorMessage } = require('./static');
-const { getDailyTransaction, registerUser, checkUser, getMonthlyTransaction, hitAiClassifyTransaction } = require('./api-client');
-const { formatDailyReport, formatRupiah, slugify, formatMonthlyReport, encodeChatID } = require('./utils');
+const { getDailyTransaction, registerUser, checkUser, getMonthlyTransaction, hitAiClassifyTransaction, deleteTransaction } = require('./api-client');
+const { formatDailyReport, formatRupiah, formatMonthlyReport, encodeChatID } = require('./utils');
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(path.resolve('./sessions'));

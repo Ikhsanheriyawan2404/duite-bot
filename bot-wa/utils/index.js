@@ -48,7 +48,8 @@ const formatMonthlyReport = (transactions) => {
     }
 
     const formattedAmount = formatRupiah(tx.amount);
-    report += `#${tx.id} ${formatDate(tx.transaction_date)} ${transactionType} ${formattedAmount} ${tx.original_text}\n`;
+    const formattedDate = formatDate(tx.transaction_date);
+    report += `#${tx.id} ${formattedDate} ${transactionType} ${formattedAmount} ${tx.original_text}\n`;
   });
 
   report += "\n";
@@ -88,9 +89,13 @@ function translateTransactionType(type) {
 
 
 const formatDate = (date) => {
+  if (!(date instanceof Date)) {
+    date = new Date(date); // Konversi string ke Date jika perlu
+  }
+
   const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() is zero-based
-  const year = String(date.getFullYear()).slice(-2); // Get last two digits of year
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Bulan dari 0-11
+  const year = String(date.getFullYear()).slice(-2); // Ambil 2 digit akhir tahun
 
   return `${day}/${month}/${year}`;
 }
