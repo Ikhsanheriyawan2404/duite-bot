@@ -72,6 +72,25 @@ const checkUser = async (phoneNumber) => {
   }
 }
 
+const deleteTransaction = async (chatId, transactionId) => {
+  try {
+    const response = await apiClient.delete(`/users/${chatId}/transactions/${transactionId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+
+      if (status >= 400 && status < 500) {
+        return data;
+      }
+    }
+
+    console.error(error.message);
+    throw error;
+  }
+};
+
 const hitAiClassifyTransaction = async (phoneNumber, prompt) => {
   try {
     const response = await apiClient.post(`/users/${phoneNumber}/transactions/ai-classify`, {
@@ -111,5 +130,6 @@ module.exports = {
   registerUser,
   checkUser,
   hitAiClassifyTransaction,
-  saveTransaction
+  saveTransaction,
+  deleteTransaction
 };

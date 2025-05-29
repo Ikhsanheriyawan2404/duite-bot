@@ -83,19 +83,17 @@ async function startBot() {
           break;
     
         case 'hapus':
-          const id = args[0];
+          const id = args[0]; // transactionId
           if (id) {
-            await sock.sendMessage(from, { text: `🗑️ Lagi ngapus transaksi dengan ID ${id} yaa...` });
-        
             try {
-              const res = await axios.delete(`${API_BASE}/users/${userId}/transactions/${id}`);
-              await sock.sendMessage(from, { text: `✅ ${res.data.message}` });
+              const res = await deleteTransaction(userId, id); // userId sebagai chatId
+              await sock.sendMessage(from, { text: `✅ ${res.message}` });
             } catch (err) {
-              const message = err.response?.data?.message || 'Gagal hapus transaksi. Coba lagi ya!';
-              await sock.sendMessage(from, { text: `❌ ${message}` });
+              const message = err.response?.data?.message || '❌ Gagal hapus transaksi. Coba lagi ya!';
+              await sock.sendMessage(from, { text: message });
             }
           } else {
-            await sock.sendMessage(from, { text: '⚠️ Format salah nih! Contoh yang bener: hapus 123' });
+            await sock.sendMessage(from, { text: '⚠️ Format salah nih! Coba ketik kayak gini:\n`hapus 123`' });
           }
           break;
     
