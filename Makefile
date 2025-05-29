@@ -57,8 +57,12 @@ endif
 
 up:
 ifeq ($(ENV),production)
+	@echo "📦 Removing old images to ensure fresh pull..."
+	@for service in $(SERVICES); do \
+		docker image rm $(REGISTRY)/$$service:$(TAG) || true; \
+	done
 	@echo "📦 Bringing up production stack..."
-	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) up -d --build
+	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_PROD) up -d --pull always
 else
 	@echo "📦 Bringing up development stack..."
 	docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV) up -d --build
