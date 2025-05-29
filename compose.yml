@@ -3,10 +3,7 @@ services:
     container_name: bot-tele
     restart: unless-stopped
     volumes:
-      - ./bot-tele:/app
       - ./.env:/app/.env
-    working_dir: /app
-    command: ./bot
     depends_on:
       - db
       - redis
@@ -17,10 +14,7 @@ services:
     container_name: bot-wa
     restart: unless-stopped
     volumes:
-      - ./bot-wa:/app
       - ./.env:/app/.env
-    working_dir: /app
-    command: node index.js
     depends_on:
       - db
       - redis
@@ -36,10 +30,7 @@ services:
       - db
       - redis
     volumes:
-      - ./core-api:/app
       - ./.env:/app/.env
-    working_dir: /app
-    command: ./core-api
     networks:
       - internal
   
@@ -54,10 +45,7 @@ services:
       - db
       - redis
     volumes:
-      - ./gateway:/app
       - ./.env:/app/.env
-    working_dir: /app
-    command: ./gateway
     networks:
       - internal
 
