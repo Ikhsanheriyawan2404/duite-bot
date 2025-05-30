@@ -13,10 +13,10 @@ const formatDailyReport = (transactions) => {
 
   transactions.forEach((tx) => {
     let transactionType = "";
-    if (tx.transactionType === "EXPENSE") {
+    if (tx.transaction_type === "EXPENSE") {
       transactionType = "🔴";
       totalOut += tx.amount;
-    } else if (tx.transactionType === "INCOME") {
+    } else if (tx.transaction_type === "INCOME") {
       transactionType = "🟢";
       totalIn += tx.amount;
     }
@@ -39,10 +39,10 @@ const formatMonthlyReport = (transactions) => {
 
   transactions.forEach((tx) => {
     let transactionType = "";
-    if (tx.transactionType === "EXPENSE") {
+    if (tx.transaction_type === "EXPENSE") {
       transactionType = "🔴";
       totalOut += tx.amount;
-    } else if (tx.transactionType === "INCOME") {
+    } else if (tx.transaction_type === "INCOME") {
       transactionType = "🟢";
       totalIn += tx.amount;
     }

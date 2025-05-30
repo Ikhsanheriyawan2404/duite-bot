@@ -139,12 +139,12 @@ async function startBot() {
             return;
           }
 
-          const { type, amount, category, transaction_date } = result.data;
+          const { transaction_type, amount, category, transaction_date } = result.data;
 
           let replyLines = [
             '✅ Siap, transaksi kamu udah ke-record! 🎉',
             '',
-            `📂 Tipe     : ${type === 'INCOME' ? '🟢 Pemasukan' : '🔴 Pengeluaran'}`,
+            `📂 Tipe     : ${transaction_type === 'INCOME' ? '🟢 Pemasukan' : '🔴 Pengeluaran'}`,
             `💰 Nominal  : ${formatRupiah(amount)}`,
             `🏷️ Kategori : ${category}`
           ];
