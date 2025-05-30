@@ -7,6 +7,7 @@ services:
     depends_on:
       - db
       - redis
+    working_dir: /app
     networks:
       - internal
 
@@ -18,6 +19,7 @@ services:
     depends_on:
       - db
       - redis
+    working_dir: /app
     networks:
       - internal
 
@@ -31,6 +33,7 @@ services:
       - redis
     volumes:
       - ./.env:/app/.env
+    working_dir: /app
     networks:
       - internal
   
@@ -46,6 +49,7 @@ services:
       - redis
     volumes:
       - ./.env:/app/.env
+    working_dir: /app
     networks:
       - internal
 
