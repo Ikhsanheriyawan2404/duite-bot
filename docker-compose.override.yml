@@ -22,3 +22,5 @@ services:
   gateway:
     build:
       context: ./gateway
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
