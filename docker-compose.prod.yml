@@ -17,3 +17,6 @@ services:
 
   gateway:
     image: ikhsan123/gateway:latest
+
+  landing-page:
+    image: ikhsan123/landing-page:latest

@@ -24,3 +24,9 @@ services:
       context: ./gateway
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+  
+  landing-page:
+    build:
+      context: ./landing-page
+    ports:
+      - "5173:5173"

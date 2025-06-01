@@ -50,6 +50,16 @@ services:
     working_dir: /app
     networks:
       - internal
+  
+  landing-page:
+    container_name: landing-page
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+    depends_on:
+      - gateway
+    networks:
+      - internal
 
   db:
     image: postgres:15
