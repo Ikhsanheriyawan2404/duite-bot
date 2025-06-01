@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://duite-bot.brogrammer.id/sitemap.xml
