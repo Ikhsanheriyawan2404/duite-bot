@@ -35,7 +35,7 @@ export function TransactionFilters({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
         <div>
           <label htmlFor="date-range" className="block text-sm font-medium mb-1">
-            Date Range
+            Rentang Tanggal
           </label>
           <Popover>
             <PopoverTrigger asChild>
@@ -54,7 +54,7 @@ export function TransactionFilters({
                     format(dateRange.from, "LLL dd, y")
                   )
                 ) : (
-                  <span>Pick a date range</span>
+                  <span>Pilih periode tanggal</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -73,23 +73,23 @@ export function TransactionFilters({
 
         <div>
           <label htmlFor="type-filter" className="block text-sm font-medium mb-1">
-            Type
+            Tipe
           </label>
           <Select value={selectedType} onValueChange={onSelectedTypeChange}>
             <SelectTrigger id="type-filter">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expense</SelectItem>
+              <SelectItem value="all">Semua Tipe</SelectItem>
+              <SelectItem value="income">Pemasukan</SelectItem>
+              <SelectItem value="expense">Pengeluaran</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div>
           <label htmlFor="category-filter" className="block text-sm font-medium mb-1">
-            Category
+            Kategori
           </label>
           <Select value={selectedCategory} onValueChange={onSelectedCategoryChange}>
             <SelectTrigger id="category-filter">
@@ -98,7 +98,7 @@ export function TransactionFilters({
             <SelectContent>
               {categories.map((category) => (
                 <SelectItem key={category} value={category}>
-                  {category === "all" ? "All Categories" : category}
+                  {category === "all" ? "Semua Kategori" : category}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -106,7 +106,7 @@ export function TransactionFilters({
         </div>
 
         <Button onClick={onResetFilters} variant="outline" className="w-full md:w-auto self-end">
-          <XIcon className="mr-2 h-4 w-4" /> Reset Filters
+          <XIcon className="mr-2 h-4 w-4" /> Reset Filter
         </Button>
       </div>
     </div>

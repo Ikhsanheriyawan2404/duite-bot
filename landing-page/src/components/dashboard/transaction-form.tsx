@@ -15,13 +15,13 @@ import { format } from "date-fns"
 import type { Transaction, TransactionType } from "@/lib/types"
 
 const formSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z.coerce.number().positive("Amount must be positive"),
-  category: z.string().min(1, "Category is required"),
+  description: z.string().min(1, "Keterangan wajib diisi"),
+  amount: z.coerce.number().positive("Nominal tidak boleh negatif"),
+  category: z.string().min(1, "Kategori wajib diisi"),
   type: z.enum(["income", "expense"], {
-    required_error: "Transaction type is required",
+    required_error: "Tipe Transaksi wajib diisi",
   }),
-  date: z.date({ required_error: "Date is required" }),
+  date: z.date({ required_error: "Tanggal wajib diisi" }),
 })
 
 type TransactionFormValues = z.infer<typeof formSchema>
@@ -76,9 +76,9 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Keterangan</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Groceries" {...field} />
+                <Input placeholder="cth: Groceries" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,7 +89,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Nominal</FormLabel>
               <FormControl>
                 <Input type="number" placeholder="e.g., 50.00" {...field} />
               </FormControl>
@@ -102,11 +102,11 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <FormLabel>Kategori</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -126,7 +126,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Type</FormLabel>
+              <FormLabel>Tipe Transaksi</FormLabel>
               <Select onValueChange={field.onChange as (value: TransactionType) => void} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -134,8 +134,8 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Pemasukan</SelectItem>
+                  <SelectItem value="expense">Pengeluaran</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -147,7 +147,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
+              <FormLabel>Tanggal    </FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -177,10 +177,10 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
         <div className="flex justify-end space-x-2 pt-2">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              Tutup
             </Button>
           )}
-          <Button type="submit">Save Transaction</Button>
+          <Button type="submit">Simpan</Button>
         </div>
       </form>
     </Form>

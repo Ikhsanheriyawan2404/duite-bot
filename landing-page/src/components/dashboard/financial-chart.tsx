@@ -17,11 +17,11 @@ interface FinancialChartProps {
 
 const chartConfig = {
   income: {
-    label: "Income",
+    label: "Pemasukan",
     color: "hsl(var(--chart-1))",
   },
   expense: {
-    label: "Expense",
+    label: "Pengeluaran",
     color: "hsl(var(--chart-2))",
   },
 }
@@ -31,11 +31,11 @@ export function FinancialChart({ data }: FinancialChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Overview</CardTitle>
-          <CardDescription>Income and expenses by month.</CardDescription>
+          <CardTitle>Ringkasan Bulanan</CardTitle>
+          <CardDescription>Pendapatan dan pengeluaran per bulan.</CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-muted-foreground">No data available for chart.</p>
+          <p className="text-muted-foreground">Tidak ada data yang tersedia untuk grafik.</p>
         </CardContent>
       </Card>
     )
@@ -43,8 +43,8 @@ export function FinancialChart({ data }: FinancialChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Monthly Overview</CardTitle>
-        <CardDescription>Income and expenses by month.</CardDescription>
+        <CardTitle>Ringkasan Bulanan</CardTitle>
+        <CardDescription>Pendapatan dan pengeluaran per bulan.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">

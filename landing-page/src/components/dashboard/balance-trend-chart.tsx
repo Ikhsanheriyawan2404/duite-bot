@@ -17,7 +17,7 @@ interface BalanceTrendChartProps {
 
 const chartConfig = {
   balance: {
-    label: "Balance",
+    label: "Saldo",
     color: "hsl(var(--chart-1))",
   },
 }
@@ -27,11 +27,11 @@ export function BalanceTrendChart({ data }: BalanceTrendChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Balance Trend</CardTitle>
-          <CardDescription>Your account balance over time.</CardDescription>
+          <CardTitle>Perkembangan Saldo</CardTitle>
+          <CardDescription>Perkembangan saldo akun Anda dari waktu ke waktu.</CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-muted-foreground">No data available for balance trend.</p>
+          <p className="text-muted-foreground">Data tren saldo tidak tersedia.</p>
         </CardContent>
       </Card>
     )
@@ -40,8 +40,8 @@ export function BalanceTrendChart({ data }: BalanceTrendChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Balance Trend</CardTitle>
-        <CardDescription>Your account balance over time.</CardDescription>
+        <CardTitle>Perkembangan Saldo</CardTitle>
+        <CardDescription>Perkembangan saldo akun Anda dari waktu ke waktu.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">

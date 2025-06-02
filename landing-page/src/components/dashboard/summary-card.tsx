@@ -6,9 +6,18 @@ interface SummaryCardProps {
   value: string
   icon: LucideIcon
   description?: string
+  descriptionVariant?: 'default' | 'success' | 'danger' | 'info' // Tambahkan variant
 }
 
-export function SummaryCard({ title, value, icon: Icon, description }: SummaryCardProps) {
+export function SummaryCard({ title, value, icon: Icon, description, descriptionVariant = "default" }: SummaryCardProps) {
+  
+  const variantClasses = {
+    default: 'text-muted-foreground',
+    success: 'text-green-600 dark:text-green-400',
+    danger: 'text-red-600 dark:text-red-400',
+    info: 'text-blue-600 dark:text-blue-400'
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -17,7 +26,7 @@ export function SummaryCard({ title, value, icon: Icon, description }: SummaryCa
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {description && <p className={`text-xs ${variantClasses[descriptionVariant]}`}>{description}</p>}
       </CardContent>
     </Card>
   )

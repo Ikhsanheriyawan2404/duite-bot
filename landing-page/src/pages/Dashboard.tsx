@@ -18,7 +18,7 @@ import { BalanceTrendChart } from "@/components/dashboard/balance-trend-chart" /
 import { TransactionsTable } from "@/components/dashboard/transactions-table"
 import { TransactionForm } from "@/components/dashboard/transaction-form"
 import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData } from "@/lib/types"
-import { DollarSign, TrendingUp, TrendingDown, PlusCircle, AlertTriangle } from "lucide-react"
+import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from "lucide-react"
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -283,13 +283,13 @@ export default function DashboardPage() {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Transaction
+              <PlusCircle className="mr-2 h-4 w-4" /> Buat Transaksi
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add New Transaction</DialogTitle>
-              <DialogDescription>Fill in the details for your new transaction.</DialogDescription>
+              <DialogTitle>Tambah Transaksi Baru</DialogTitle>
+              <DialogDescription>Lengkapi rincian transaksi baru Anda.</DialogDescription>
             </DialogHeader>
             <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsAddDialogOpen(false)} />
           </DialogContent>
@@ -297,20 +297,33 @@ export default function DashboardPage() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <SummaryCard title="Total Income" value={`$${summaryData.totalIncome.toFixed(2)}`} icon={TrendingUp} />
-        <SummaryCard title="Total Expenses" value={`$${summaryData.totalExpenses.toFixed(2)}`} icon={TrendingDown} />
+        <SummaryCard title="Total Pemasukan" value={`$${summaryData.totalIncome.toFixed(2)}`} icon={TrendingUp} />
+        <SummaryCard title="Total Pengeluaran" value={`$${summaryData.totalExpenses.toFixed(2)}`} icon={TrendingDown} />
         <SummaryCard
-          title="Balance"
+          title="Saldo"
           value={`$${summaryData.balance.toFixed(2)}`}
           icon={DollarSign}
-          description={summaryData.balance >= 0 ? "You're in the green!" : "You're in the red."}
-        />
+          description={summaryData.balance >= 0 ? "Keuangan sehat!" : "Perlu perhatian!"}
+          descriptionVariant={summaryData.balance >= 0 ? 'success' : 'danger'}
+          />
       </section>
 
       {/* Charts Section */}
-      <section className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <FinancialChart data={monthlyIncomeExpenseData} /> {/* Existing Bar Chart */}
-        <ExpenseCategoryPieChart data={expenseCategoryData} />
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+        {/* Chart 1 - Akan sejajar dengan Chart 2 di desktop */}
+        <div className="h-full min-h-[300px]">
+          <FinancialChart data={monthlyIncomeExpenseData} />
+        </div>
+        
+        {/* Chart 2 - Akan sejajar dengan Chart 1 di desktop */}
+        <div className="h-full min-h-[300px]">
+          <ExpenseCategoryPieChart data={expenseCategoryData} />
+        </div>
+        
+        {/* Chart 3 - Selalu full width */}
+        <div className="h-full min-h-[300px] md:col-span-2">
+          <BalanceTrendChart data={balanceTrendData} />
+        </div>
       </section>
 
       <section>
@@ -336,8 +349,8 @@ export default function DashboardPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Transaction</DialogTitle>
-            <DialogDescription>Update the details for your transaction.</DialogDescription>
+            <DialogTitle>Edit Transaksi</DialogTitle>
+            <DialogDescription>Perbarui detail transaksi Anda.</DialogDescription>
           </DialogHeader>
           {currentTransaction && (
             <TransactionForm

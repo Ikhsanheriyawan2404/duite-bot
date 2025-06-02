@@ -34,11 +34,11 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Expense Distribution</CardTitle>
-          <CardDescription>Breakdown of expenses by category.</CardDescription>
+          <CardTitle>Distribusi Pengeluaran</CardTitle>
+          <CardDescription>Rincian pengeluaran berdasarkan kategori.</CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-muted-foreground">No expense data available for chart.</p>
+          <p className="text-muted-foreground">Data pengeluaran tidak tersedia untuk ditampilkan.</p>
         </CardContent>
       </Card>
     )
@@ -47,8 +47,8 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expense Distribution</CardTitle>
-        <CardDescription>Breakdown of expenses by category.</CardDescription>
+        <CardTitle>Distribusi Pengeluaran</CardTitle>
+        <CardDescription>Rincian pengeluaran berdasarkan kategori.</CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-center">
         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">

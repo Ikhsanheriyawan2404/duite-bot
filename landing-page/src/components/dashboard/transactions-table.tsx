@@ -24,12 +24,12 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Tanggal</TableHead>
+            <TableHead>Keterangan</TableHead>
+            <TableHead>Kategori</TableHead>
+            <TableHead className="text-right">Nominal</TableHead>
+            <TableHead>Tipe</TableHead>
+            <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,7 +73,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      Hapus
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
