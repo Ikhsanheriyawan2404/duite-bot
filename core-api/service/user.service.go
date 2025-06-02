@@ -1,8 +1,13 @@
 package service
 
 import (
+	"context"
 	"finance-bot/model"
 	"finance-bot/repository"
+	"finance-bot/utils"
+	"time"
+
+	redis "finance-bot/config"
 )
 
 type UserService interface {
@@ -13,6 +18,7 @@ type UserService interface {
 	GetDailyReport(chatID int64) ([]model.Transaction, error)
     GetMonthlyReport(chatID int64) ([]model.Transaction, error)
     DeleteTransactionByID(transactionID uint, chatID int64) error
+    GenerateMagicLoginToken(chatID int64) (string, error)
 }
 
 type userService struct {
@@ -49,4 +55,15 @@ func (s *userService) GetMonthlyReport(chatID int64) ([]model.Transaction, error
 
 func (s *userService) DeleteTransactionByID(transactionID uint, chatID int64) error {
     return s.userRepo.DeleteTransactionByID(transactionID, chatID)
+}
+
+func (s *userService) GenerateMagicLoginToken(chatID int64) (string, error) {
+	user, _ := s.userRepo.GetByChatId(chatID)
+
+	token := utils.GenerateRandomToken(32)
+	key := "magic_login:" + token
+
+	redis.Client.Set(context.Background(), key, user.ChatID, 15*time.Minute).Err()
+
+	return token, nil
 }

@@ -61,13 +61,79 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:9000/users/register
+POST http://localhost:8081/users/magic-link
 Content-Type: application/json
 
 {
-  "chat_id": 12345678,
-  "name": "IkhsanJH"
+  "chat_id": 12345678
 }
+
+###
+# @name login
+POST http://localhost:8080/auth/magic-login
+Content-Type: application/json
+
+{
+  "token": "tok_8e333bd01378fda6423ac876d2eca2c8c64e89d67d43856ab50915c90e9c6150"
+}
+
+
+### Refresh access token using refresh token
+# @name refresh
+POST http://localhost:8080/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{login.response.body.refresh_token}}"
+}
+
+###
+GET http://localhost:8080/user/me
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
+
+{
+
+}
+
+### Create transaction
+POST http://localhost:8080/transactions
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
+
+{
+  "transaction_type": "INCOME",
+  "category": "Makanan",
+  "amount": 10000,
+  "original_text": "Pembelian barang",
+  "transaction_date": "2025-06-02"
+}
+
+### Get all transactions
+GET http://localhost:8080/transactions
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
+
+### Get single transaction by ID
+GET http://localhost:8080/transactions/28
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
+
+### Update transaction
+PUT http://localhost:8080/transactions/28
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
+
+{
+  "amount": 10000,
+  "description": "Pembelian alat tulis",
+  "date": "2025-06-03"
+}
+
+### Delete transaction
+DELETE http://localhost:8080/transactions/27
+Content-Type: application/json
+Authorization: {{refresh.response.body.access_token}}
 
 ###
 GET http://localhost:9000/users/62821170881423/transactions/daily

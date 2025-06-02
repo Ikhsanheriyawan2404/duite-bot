@@ -389,3 +389,24 @@ func hitChatGpt(prompt string) (*Result, *ChatResponse, error) {
 	return &result, &chatResp, nil
 }
 
+func (h *UserHandler) GenerateMagicLink(c *fiber.Ctx) error {
+	type request struct {
+		ChatID int64 `json:"chat_id"`
+	}
+
+	var req request
+	if err := c.BodyParser(&req); err != nil {
+		fmt.Println("BodyParser error:", err) // ✅ DEBUG INI
+
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request")
+	}
+
+	token, _ := h.userService.GenerateMagicLoginToken(req.ChatID)
+
+	return c.JSON(fiber.Map{
+		"message": "Magic login link generated",
+		"token": token,
+	})
+}
+
+

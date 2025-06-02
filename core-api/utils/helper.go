@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"regexp"
 	"strings"
 	"unicode"
@@ -23,4 +25,13 @@ func Slugify(s string) string {
 func ContainsNominal(s string) bool {
 	re := regexp.MustCompile(`\d+`)
 	return re.MatchString(s)
+}
+
+func GenerateRandomToken(n int) string {
+	bytes := make([]byte, n)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return "tok_" + hex.EncodeToString(bytes)
 }

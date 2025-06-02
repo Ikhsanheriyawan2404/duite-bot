@@ -29,4 +29,4 @@ services:
     build:
       context: ./landing-page
     ports:
-      - "5173:5173"
+      - "5173:80"

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -24,8 +23,4 @@ func GenerateJWT(userID string, duration time.Duration) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(JWTSecret)
-}
-
-func GenerateRandomToken(n int) string {
-	return fmt.Sprintf("tok_%d", time.Now().UnixNano())
 }

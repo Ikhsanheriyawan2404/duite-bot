@@ -57,7 +57,8 @@ func main() {
 	users := app.Group("/users")
 	
 	users.Post("/register", userHandler.RegisterUser)
-	
+	users.Post("/magic-link", userHandler.GenerateMagicLink)
+
 	users.Get("/:userId", userHandler.GetUser)
 	users.Get("/:chatId/exists", userHandler.CheckUser)
 	users.Get("/:userId/transactions", userHandler.GetTransactions)

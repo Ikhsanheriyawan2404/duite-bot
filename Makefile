@@ -3,7 +3,7 @@ REGISTRY ?= ikhsan123
 TAG ?= latest
 
 # Daftar service yang akan di-build dan push
-SERVICES = bot-tele bot-wa core-api gateway
+SERVICES = bot-tele bot-wa core-api gateway landing-page
 
 # Default ENV mode
 ENV ?= development
