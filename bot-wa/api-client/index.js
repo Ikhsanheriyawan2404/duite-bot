@@ -72,6 +72,27 @@ const checkUser = async (phoneNumber) => {
   }
 }
 
+const requestMagicLink = async (phoneNumber) => {
+  try {
+    const response = await apiClient.post(`/users/magic-link`, {
+      chat_id: phoneNumber
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      
+      if (status >= 400 && status < 500) {
+        return data;
+      }
+    }
+    
+    console.error(error.message);
+    throw error;
+  }
+}
+
 const deleteTransaction = async (chatId, transactionId) => {
   try {
     const response = await apiClient.delete(`/users/${chatId}/transactions/${transactionId}`);
@@ -131,5 +152,6 @@ module.exports = {
   checkUser,
   hitAiClassifyTransaction,
   saveTransaction,
-  deleteTransaction
+  deleteTransaction,
+  requestMagicLink
 };

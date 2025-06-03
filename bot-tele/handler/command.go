@@ -182,26 +182,34 @@ func handleRegister(chatID int64, inputMessage string, bot *tgbotapi.BotAPI, api
 		"name":    userFullName,
 	}
 	var user model.User
+
+	var response struct {
+		Token string `json:"token"`
+	}
+
 	err := apiClient.Request("POST", "/users/register", reqBody, &user)
 	if err != nil {
+		apiClient.Request("POST", "/users/magic-link", reqBody, &response)
 		msg := tgbotapi.NewMessage(chatID, "Eh, btw kamu udah daftar sebelumnya, hehe")
 		msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 				{
 					tgbotapi.NewInlineKeyboardButtonURL("📊 Mau aku bantu lihat dashboard?",
-						config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+						config.AppConfig.DashboardUrl + "?ref=" + response.Token),
 				},
 			},
 		}
 		bot.Send(msg)
 		return
 	}
+	
+	apiClient.Request("POST", "/users/magic-link", reqBody, &response)
 	msg := tgbotapi.NewMessage(chatID, "Hai " + user.Name + ", mau aku bantu lihat dashboard?")
 	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{
 				tgbotapi.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
-					config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+					config.AppConfig.DashboardUrl + "?ref=" + response.Token),
 			},
 		},
 	}
@@ -226,16 +234,18 @@ func handleDashboard(chatID int64, bot *tgbotapi.BotAPI, apiClient *service.APIC
 	reqBody := map[string]any{
 		"chat_id": chatID,
 	}
-	var response struct { token string }
+
+	var response struct {
+		Token string `json:"token"`
+	}
 	apiClient.Request("POST", "/users/magic-link", reqBody, &response)
-	fmt.Println(response)
 
 	msg := tgbotapi.NewMessage(chatID, "Klik tombol di bawah untuk membuka dashboard:")
 	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{
 				tgbotapi.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
-					config.AppConfig.DashboardUrl + "?ref=" + response.token),
+					config.AppConfig.DashboardUrl + "?ref=" + response.Token),
 			},
 		},
 	}

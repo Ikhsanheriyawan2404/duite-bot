@@ -107,10 +107,13 @@ async function startBot() {
             break;
           }
           const resultRegister = await registerUser(senderNumber, fullName);
-          let urlDashbord = config.DASHBOARD_URL + "?ref=" + encodeChatID(senderNumber)
+          let urlDashbord = ""
           if(resultRegister.error) {
+            resultMagicLink = await requestMagicLink(senderNumber)
+            urlDashbord = config.DASHBOARD_URL + "?ref=" + resultMagicLink.token
             await sock.sendMessage(from, { text: `Eh, btw kamu udah daftar sebelumnya, hehe\nmau aku bantu lihat dashboard?\nklik disini ya ${urlDashbord}` });
           } else {
+            urlDashbord = config.DASHBOARD_URL + "?ref=" + resultMagicLink.token
             await sock.sendMessage(from, {
               text: `Hai ${resultRegister.name}, mau aku bantu lihat dashboard?\nklik disini ya ${urlDashbord}`
             });
@@ -120,7 +123,8 @@ async function startBot() {
         case 'dashboard':
           const checkedUser = await checkUser(senderNumber);
           if (checkedUser.exist) {
-            let urlDashbord = config.DASHBOARD_URL + "?ref=" + encodeChatID(senderNumber)
+            resultMagicLink = await requestMagicLink(senderNumber)
+            let urlDashbord = config.DASHBOARD_URL + "?ref=" + resultMagicLink.token
             await sock.sendMessage(from, {
               text: `📊 Dashboard klik disini ya 👉 ${urlDashbord}`,
             });
