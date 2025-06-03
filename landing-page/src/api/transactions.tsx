@@ -2,7 +2,8 @@ import { Transaction } from "@/lib/types"
 import { getAccessToken } from "../lib/authToken"
 import { refreshToken } from "./auth"
 
-const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
+const API_BASE = "https://gateway-duite.brogrammer.id"
+// const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
 
 async function fetchWithAuth(input: string, init?: RequestInit): Promise<Response> {
   const token = getAccessToken()
