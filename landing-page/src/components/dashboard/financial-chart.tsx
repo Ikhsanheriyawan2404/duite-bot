@@ -18,11 +18,11 @@ interface FinancialChartProps {
 const chartConfig = {
   income: {
     label: "Pemasukan",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-2))",
   },
   expense: {
     label: "Pengeluaran",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(var(--chart-1))",
   },
 }
 
@@ -49,7 +49,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <BarChart data={data} margin={{ top: 5, right: 20, left: 2, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis tickLine={false} axisLine={false} tickMargin={8} />

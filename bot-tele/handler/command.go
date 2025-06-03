@@ -226,16 +226,16 @@ func handleDashboard(chatID int64, bot *tgbotapi.BotAPI, apiClient *service.APIC
 	reqBody := map[string]any{
 		"chat_id": chatID,
 	}
-	var token string
-	apiClient.Request("POST", "/users/magic-link", reqBody, &token)
-	fmt.Println(token)
+	var response struct { token string }
+	apiClient.Request("POST", "/users/magic-link", reqBody, &response)
+	fmt.Println(response)
 
 	msg := tgbotapi.NewMessage(chatID, "Klik tombol di bawah untuk membuka dashboard:")
 	msg.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{
 				tgbotapi.NewInlineKeyboardButtonURL("📊 Buka Dashboard",
-					config.AppConfig.DashboardUrl + "?ref=" + utils.EncodeChatID(chatID)),
+					config.AppConfig.DashboardUrl + "?ref=" + response.token),
 			},
 		},
 	}

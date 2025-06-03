@@ -16,7 +16,7 @@ interface TransactionsTableProps {
 
 export function TransactionsTable({ transactions, onEdit, onDelete }: TransactionsTableProps) {
   if (!transactions || transactions.length === 0) {
-    return <p className="text-muted-foreground py-4">No transactions yet. Add one to get started!</p>
+    return <p className="text-muted-foreground py-4">Belum ada data transaksi. Silakan tambahkan transaksi pertama Anda untuk memulai.</p>
   }
 
   return (
@@ -35,24 +35,24 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
         <TableBody>
           {transactions.map((transaction) => (
             <TableRow key={transaction.id}>
-              <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
-              <TableCell className="font-medium">{transaction.description}</TableCell>
+              <TableCell>{format(new Date(transaction.transaction_date), "MMM d, yyyy")}</TableCell>
+              <TableCell className="font-medium">{transaction.original_text}</TableCell>
               <TableCell>
                 <Badge variant="outline">{transaction.category}</Badge>
               </TableCell>
-              <TableCell className={`text-right ${transaction.type === "income" ? "text-green-600" : "text-red-600"}`}>
-                {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+              <TableCell className={`text-right ${transaction.transaction_type === "INCOME" ? "text-green-600" : "text-red-600"}`}>
+                {transaction.transaction_type === "INCOME" ? "+" : "-"}{transaction.amount.toLocaleString('id')}
               </TableCell>
               <TableCell>
                 <Badge
-                  variant={transaction.type === "income" ? "default" : "destructive"}
+                  variant={transaction.transaction_type === "INCOME" ? "default" : "destructive"}
                   className={
-                    transaction.type === "income"
+                    transaction.transaction_type === "INCOME"
                       ? "bg-green-100 text-green-700 hover:bg-green-200"
                       : "bg-red-100 text-red-700 hover:bg-red-200"
                   }
                 >
-                  {transaction.type}
+                  {transaction.transaction_type === "INCOME" ? "Masuk" : "Keluar"}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">

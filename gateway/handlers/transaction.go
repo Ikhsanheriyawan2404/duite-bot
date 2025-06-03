@@ -82,20 +82,43 @@ func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(transaction)
 }
 
-// Get All Transactions
+// Get All Transactions with optional filters
 func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(string)
+	userIDRaw := c.Locals("user_id")
+	userID, ok := userIDRaw.(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
 	var transactions []model.Transaction
 
-	query := h.DB.Where("chat_id = ?", userID)
+	query := h.DB.Model(&model.Transaction{}).Where("chat_id = ?", userID)
 
+	// Optional filter: transaction_type
 	if txType := c.Query("type"); txType != "" {
 		query = query.Where("transaction_type = ?", txType)
 	}
+
+	// Optional filter: category
 	if category := c.Query("category"); category != "" {
 		query = query.Where("category = ?", category)
 	}
 
+	// Optional filter: date range
+	startDate := c.Query("start_date") // format: YYYY-MM-DD
+	endDate := c.Query("end_date")     // format: YYYY-MM-DD
+
+	if startDate != "" && endDate != "" {
+		query = query.Where("transaction_date BETWEEN ? AND ?", startDate, endDate)
+	} else if startDate != "" {
+		query = query.Where("transaction_date >= ?", startDate)
+	} else if endDate != "" {
+		query = query.Where("transaction_date <= ?", endDate)
+	}
+
+	// Execute query
 	if err := query.Order("transaction_date DESC").Find(&transactions).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch transactions",

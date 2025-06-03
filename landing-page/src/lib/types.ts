@@ -1,12 +1,12 @@
-export type TransactionType = "income" | "expense"
+export type TransactionType = "INCOME" | "EXPENSE"
 
 export interface Transaction {
   id: string
-  date: Date
-  description: string
+  transaction_date: Date
+  original_text: string
   category: string
   amount: number
-  type: TransactionType
+  transaction_type: TransactionType
 }
 
 // For the monthly income/expense bar chart
@@ -27,4 +27,16 @@ export interface CategoryExpenseData {
 export interface BalanceTrendData {
   date: string // e.g., "Jan 2024" or a specific date
   balance: number
+}
+
+export interface AuthResponse {
+  access_token: string
+  refresh_token: string
+}
+
+export interface User {
+  id: number
+  name: string
+  chat_id: number
+  uuid: string,
 }

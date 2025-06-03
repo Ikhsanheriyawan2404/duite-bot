@@ -81,8 +81,8 @@ export function TransactionFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Tipe</SelectItem>
-              <SelectItem value="income">Pemasukan</SelectItem>
-              <SelectItem value="expense">Pengeluaran</SelectItem>
+              <SelectItem value="INCOME">Pemasukan</SelectItem>
+              <SelectItem value="EXPENSE">Pengeluaran</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -18,7 +18,7 @@ interface BalanceTrendChartProps {
 const chartConfig = {
   balance: {
     label: "Saldo",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-2)",
   },
 }
 

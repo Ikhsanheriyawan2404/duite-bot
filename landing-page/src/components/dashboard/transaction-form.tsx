@@ -15,13 +15,13 @@ import { format } from "date-fns"
 import type { Transaction, TransactionType } from "@/lib/types"
 
 const formSchema = z.object({
-  description: z.string().min(1, "Keterangan wajib diisi"),
+  original_text: z.string().min(1, "Keterangan wajib diisi"),
   amount: z.coerce.number().positive("Nominal tidak boleh negatif"),
   category: z.string().min(1, "Kategori wajib diisi"),
-  type: z.enum(["income", "expense"], {
+  transaction_type: z.enum(["INCOME", "EXPENSE"], {
     required_error: "Tipe Transaksi wajib diisi",
   }),
-  date: z.date({ required_error: "Tanggal wajib diisi" }),
+  transaction_date: z.date({ required_error: "Tanggal wajib diisi" }),
 })
 
 type TransactionFormValues = z.infer<typeof formSchema>
@@ -52,14 +52,14 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
       ? {
           ...initialData,
           amount: initialData.amount || 0,
-          date: initialData.date ? new Date(initialData.date) : new Date(),
+          transaction_date: initialData.transaction_date ? new Date(initialData.transaction_date) : new Date(),
         }
       : {
-          description: "",
+          original_text: "",
           amount: 0,
           category: "",
-          type: "expense",
-          date: new Date(),
+          transaction_type: "EXPENSE",
+          transaction_date: new Date(),
         },
   })
 
@@ -73,12 +73,12 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="description"
+          name="original_text"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Keterangan</FormLabel>
               <FormControl>
-                <Input placeholder="cth: Groceries" {...field} />
+                <Input placeholder="cth: Jajan Cilok" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +91,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
             <FormItem>
               <FormLabel>Nominal</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="e.g., 50.00" {...field} />
+                <Input type="number" placeholder="e.g., 15000" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -123,7 +123,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
         />
         <FormField
           control={form.control}
-          name="type"
+          name="transaction_type"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipe Transaksi</FormLabel>
@@ -144,7 +144,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
         />
         <FormField
           control={form.control}
-          name="date"
+          name="transaction_date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Tanggal    </FormLabel>

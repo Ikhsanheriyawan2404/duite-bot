@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,89 +19,34 @@ import { TransactionsTable } from "@/components/dashboard/transactions-table"
 import { TransactionForm } from "@/components/dashboard/transaction-form"
 import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData } from "@/lib/types"
 import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from "lucide-react"
-import { format, startOfMonth, endOfMonth } from "date-fns"
+import { format } from "date-fns"
 import { DateRange } from "react-day-picker"
+import { getMe, magicLogin } from "@/api/auth"
+import { fetchTransactions } from "@/api/transactions"
+import { formatDate } from "@/lib/utils"
 
-// Mock initial data
-const initialTransactions: Transaction[] = [
-  {
-    id: "1",
-    date: new Date("2025-03-15"),
-    description: "Old Salary",
-    category: "Salary",
-    amount: 4800,
-    type: "income",
-  },
-  {
-    id: "1a",
-    date: new Date("2025-03-20"),
-    description: "Old Groceries",
-    category: "Groceries",
-    amount: 120,
-    type: "expense",
-  },
-  {
-    id: "1b",
-    date: new Date("2025-04-10"),
-    description: "Consulting Gig",
-    category: "Freelance",
-    amount: 600,
-    type: "income",
-  },
-  {
-    id: "1c",
-    date: new Date("2025-04-25"),
-    description: "Utilities",
-    category: "Utilities",
-    amount: 90,
-    type: "expense",
-  },
-  { id: "2", date: new Date("2025-05-01"), description: "Salary", category: "Salary", amount: 5000, type: "income" },
-  {
-    id: "3",
-    date: new Date("2025-05-05"),
-    description: "Groceries",
-    category: "Groceries",
-    amount: 150,
-    type: "expense",
-  },
-  { id: "4", date: new Date("2025-05-10"), description: "Rent", category: "Rent", amount: 1200, type: "expense" },
-  {
-    id: "5",
-    date: new Date("2025-06-01"),
-    description: "Freelance Project",
-    category: "Freelance",
-    amount: 800,
-    type: "income",
-  },
-  {
-    id: "6",
-    date: new Date("2025-06-03"),
-    description: "Dinner Out",
-    category: "Entertainment",
-    amount: 75,
-    type: "expense",
-  },
-  {
-    id: "7",
-    date: new Date("2025-06-15"),
-    description: "New Phone",
-    category: "Electronics",
-    amount: 600,
-    type: "expense",
-  },
-  { id: "8", date: new Date("2025-07-01"), description: "Salary", category: "Salary", amount: 5200, type: "income" },
-  {
-    id: "9",
-    date: new Date("2025-07-05"),
-    description: "Groceries",
-    category: "Groceries",
-    amount: 160,
-    type: "expense",
-  },
-]
+const initialTransactions: Transaction[] = []
 
 export default function DashboardPage() {
+  
+  const loadFilterTransactions = async () => {
+    try {
+      const typeParam = selectedType === "all" ? undefined : selectedType;
+      const categoryParam = selectedCategory === "all" ? undefined : selectedCategory;
+
+      const fetched = await fetchTransactions(
+        typeParam,
+        categoryParam,
+        dateRange.from,
+        dateRange.to
+      );
+      console.log({fetched})
+      setTransactions(fetched);
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+    }
+  };
+
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -109,41 +54,54 @@ export default function DashboardPage() {
   const [currentTransaction, setCurrentTransaction] = useState<Transaction | undefined>(undefined)
   const [transactionToDeleteId, setTransactionToDeleteId] = useState<string | null>(null)
 
-  // const [dateRange, setDateRange] = useState<{ from: Date; to?: Date }>({from: new Date()})
+  const now = new Date();
+  const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
+    from: awalBulan,
+    to: now,
   });
   const [selectedType, setSelectedType] = useState<string>("all")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get("ref")
+
+    const doAuthAndFetch = async () => {
+      try {
+        if (token) {
+          // hanya panggil magic login jika ada token
+          await magicLogin(token)
+          // hilangkan ref token dari URL agar tidak terus login ulang
+          const cleanUrl = window.location.origin + window.location.pathname
+          window.history.replaceState({}, document.title, cleanUrl)
+        }
+
+        // lanjutkan login menggunakan token yang sudah disimpan
+        await getMe()
+        await loadFilterTransactions();
+      } catch (err) {
+        console.error("Login or fetch error:", err)
+        // optional: redirect ke halaman login
+      }
+    }
+
+    doAuthAndFetch()
+  }, [])
+
+  useEffect(() => {
+    loadFilterTransactions();
+  }, [selectedType, selectedCategory, dateRange]);
 
   const uniqueCategories = useMemo(() => {
     const categories = new Set(transactions.map((t) => t.category))
     return ["all", ...Array.from(categories).sort()]
   }, [transactions])
 
-  const filteredTransactions = useMemo(() => {
-    return transactions
-      .filter((transaction) => {
-        const transactionDate = new Date(transaction.date)
-        const { from, to } = dateRange
-        if (from && transactionDate < startOfMonth(from)) return false
-        if (to) {
-          const toEndOfDay = endOfMonth(to) // Ensure 'to' date includes the whole month if filtering by month
-          toEndOfDay.setHours(23, 59, 59, 999)
-          if (transactionDate > toEndOfDay) return false
-        }
-        if (selectedType !== "all" && transaction.type !== selectedType) return false
-        if (selectedCategory !== "all" && transaction.category !== selectedCategory) return false
-        return true
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort for balance trend
-  }, [transactions, dateRange, selectedType, selectedCategory])
-
   const summaryData = useMemo(() => {
     // Summary should reflect ALL transactions, not filtered ones
-    const totalIncome = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0)
-    const totalExpenses = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0)
+    const totalIncome = transactions.filter((t) => t.transaction_type === "INCOME").reduce((sum, t) => sum + t.amount, 0)
+    const totalExpenses = transactions.filter((t) => t.transaction_type === "EXPENSE").reduce((sum, t) => sum + t.amount, 0)
     const balance = totalIncome - totalExpenses
     return { totalIncome, totalExpenses, balance }
   }, [transactions])
@@ -151,102 +109,102 @@ export default function DashboardPage() {
   // Data for Monthly Income/Expense Bar Chart (FinancialChart)
   const monthlyIncomeExpenseData = useMemo((): MonthlyData[] => {
     const monthlyMap: Record<string, { income: number; expense: number }> = {}
-    filteredTransactions.forEach((transaction) => {
-      const date = new Date(transaction.date)
+    transactions.forEach((transaction) => {
+      const date = new Date(transaction.transaction_date)
       const monthYear = format(date, "MMM yyyy")
       if (!monthlyMap[monthYear]) {
         monthlyMap[monthYear] = { income: 0, expense: 0 }
       }
-      if (transaction.type === "income") {
+      if (transaction.transaction_type === "INCOME") {
         monthlyMap[monthYear].income += transaction.amount
-      } else {
+      } else if (transaction.transaction_type === "EXPENSE") {
         monthlyMap[monthYear].expense += transaction.amount
       }
     })
     return Object.entries(monthlyMap)
       .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
-  }, [filteredTransactions])
+  }, [transactions])
 
   // Data for Expense Category Pie Chart
   const expenseCategoryData = useMemo((): CategoryExpenseData[] => {
     const categoryMap: Record<string, number> = {}
-    filteredTransactions
-      .filter((t) => t.type === "expense")
+    transactions
+      .filter((t) => t.transaction_type === "EXPENSE")
       .forEach((transaction) => {
         categoryMap[transaction.category] = (categoryMap[transaction.category] || 0) + transaction.amount
       })
     return Object.entries(categoryMap)
       .map(([category, totalExpense]) => ({ category, totalExpense }))
       .sort((a, b) => b.totalExpense - a.totalExpense) // Sort for consistent pie chart segment order
-  }, [filteredTransactions])
+  }, [transactions])
 
   // Data for Balance Trend Line Chart
-  const balanceTrendData = useMemo((): BalanceTrendData[] => {
-    if (filteredTransactions.length === 0) return []
+  // const balanceTrendData = useMemo((): BalanceTrendData[] => {
+  //   if (transactions.length === 0) return []
 
-    const trend: BalanceTrendData[] = []
-    let currentBalance = 0
+  //   const trend: BalanceTrendData[] = []
+  //   let currentBalance = 0
 
-    // Calculate initial balance before the filtered period if filters are applied
-    // This gives a more accurate starting point for the trend within the filtered view.
-    // For simplicity in this example, we'll start the trend from the first filtered transaction.
-    // A more robust solution would calculate balance from all transactions up to the start of the filtered period.
+  //   // Calculate initial balance before the filtered period if filters are applied
+  //   // This gives a more accurate starting point for the trend within the filtered view.
+  //   // For simplicity in this example, we'll start the trend from the first filtered transaction.
+  //   // A more robust solution would calculate balance from all transactions up to the start of the filtered period.
 
-    const transactionsByMonth: Record<string, Transaction[]> = {}
-    filteredTransactions.forEach((t) => {
-      const monthYear = format(new Date(t.date), "MMM yyyy")
-      if (!transactionsByMonth[monthYear]) {
-        transactionsByMonth[monthYear] = []
-      }
-      transactionsByMonth[monthYear].push(t)
-    })
+  //   const transactionsByMonth: Record<string, Transaction[]> = {}
+  //   transactions.forEach((t) => {
+  //     const monthYear = format(new Date(t.transaction_date), "MMM yyyy")
+  //     if (!transactionsByMonth[monthYear]) {
+  //       transactionsByMonth[monthYear] = []
+  //     }
+  //     transactionsByMonth[monthYear].push(t)
+  //   })
 
-    const sortedMonths = Object.keys(transactionsByMonth).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  //   const sortedMonths = Object.keys(transactionsByMonth).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
 
-    // Find overall starting balance before any filtered transactions
-    // This is complex if we want the true historical balance.
-    // For this example, let's assume the balance trend starts from 0 before the first transaction in the *original* dataset,
-    // and then we calculate the balance up to the start of the filtered period.
-    let balanceBeforeFilteredPeriod = 0
-    const firstFilteredDate = filteredTransactions.length > 0 ? new Date(filteredTransactions[0].date) : new Date()
+  //   // Find overall starting balance before any filtered transactions
+  //   // This is complex if we want the true historical balance.
+  //   // For this example, let's assume the balance trend starts from 0 before the first transaction in the *original* dataset,
+  //   // and then we calculate the balance up to the start of the filtered period.
+  //   let balanceBeforeFilteredPeriod = 0
+  //   const firstFilteredDate = transactions.length > 0 ? new Date(transactions[0].transaction_date) : new Date()
 
-    initialTransactions.forEach((t) => {
-      if (new Date(t.date) < firstFilteredDate) {
-        balanceBeforeFilteredPeriod += t.type === "income" ? t.amount : -t.amount
-      }
-    })
-    currentBalance = balanceBeforeFilteredPeriod
+  //   initialTransactions.forEach((t) => {
+  //     if (new Date(t.transaction_date) < firstFilteredDate) {
+  //       balanceBeforeFilteredPeriod += t.transaction_type === "income" ? t.amount : -t.amount
+  //     }
+  //   })
+  //   currentBalance = balanceBeforeFilteredPeriod
 
-    sortedMonths.forEach((month) => {
-      transactionsByMonth[month].forEach((t) => {
-        currentBalance += t.type === "income" ? t.amount : -t.amount
-      })
-      trend.push({ date: month, balance: Number.parseFloat(currentBalance.toFixed(2)) })
-    })
+  //   sortedMonths.forEach((month) => {
+  //     transactionsByMonth[month].forEach((t) => {
+  //       currentBalance += t.transaction_type === "income" ? t.amount : -t.amount
+  //     })
+  //     trend.push({ date: month, balance: Number.parseFloat(currentBalance.toFixed(2)) })
+  //   })
 
-    // If no transactions in a month within the range, we might want to carry forward the balance.
-    // This current logic shows balance at month-end where transactions occurred.
-    return trend
-  }, [filteredTransactions, initialTransactions])
+  //   // If no transactions in a month within the range, we might want to carry forward the balance.
+  //   // This current logic shows balance at month-end where transactions occurred.
+  //   return trend
+  // }, [transactions, initialTransactions])
 
   const handleAddTransaction = useCallback((values: Omit<Transaction, "id">) => {
-    setTransactions((prev) =>
-      [...prev, { ...values, id: crypto.randomUUID() }].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(), // Sort by date asc for consistency
-      ),
-    )
+    // setTransactions((prev) =>
+    //   [...prev, { ...values, id: crypto.randomUUID() }].sort(
+    //     (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime(), // Sort by date asc for consistency
+    //   ),
+    // )
     setIsAddDialogOpen(false)
   }, [])
 
   const handleEditTransaction = useCallback(
     (values: Omit<Transaction, "id">) => {
       if (!currentTransaction) return
-      setTransactions((prev) =>
-        prev
-          .map((t) => (t.id === currentTransaction.id ? { ...values, id: t.id } : t))
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-      )
+      // setTransactions((prev) =>
+      //   prev
+      //     .map((t) => (t.id === currentTransaction.id ? { ...values, id: t.id } : t))
+      //     .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()),
+      // )
       setIsEditDialogOpen(false)
       setCurrentTransaction(undefined)
     },
@@ -271,7 +229,10 @@ export default function DashboardPage() {
   }
 
   const resetFilters = () => {
-    setDateRange({from: new Date()})
+    const now = new Date();
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    setDateRange({ from: awalBulan, to: now });
     setSelectedType("all")
     setSelectedCategory("all")
   }
@@ -296,12 +257,23 @@ export default function DashboardPage() {
         </Dialog>
       </header>
 
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">
+          Menampilkan data untuk: 
+          <strong>
+          {dateRange.from && dateRange.to
+            ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
+            : "-"}
+          </strong>
+        </p>
+      </div>
+
       <section className="grid gap-4 md:grid-cols-3">
-        <SummaryCard title="Total Pemasukan" value={`$${summaryData.totalIncome.toFixed(2)}`} icon={TrendingUp} />
-        <SummaryCard title="Total Pengeluaran" value={`$${summaryData.totalExpenses.toFixed(2)}`} icon={TrendingDown} />
+        <SummaryCard title="Total Pemasukan" value={`Rp${summaryData.totalIncome.toLocaleString('id')}`} icon={TrendingUp} />
+        <SummaryCard title="Total Pengeluaran" value={`Rp${summaryData.totalExpenses.toLocaleString('id')}`} icon={TrendingDown} />
         <SummaryCard
           title="Saldo"
-          value={`$${summaryData.balance.toFixed(2)}`}
+          value={`Rp${summaryData.balance.toLocaleString('id')}`}
           icon={DollarSign}
           description={summaryData.balance >= 0 ? "Keuangan sehat!" : "Perlu perhatian!"}
           descriptionVariant={summaryData.balance >= 0 ? 'success' : 'danger'}
@@ -321,9 +293,9 @@ export default function DashboardPage() {
         </div>
         
         {/* Chart 3 - Selalu full width */}
-        <div className="h-full min-h-[300px] md:col-span-2">
+        {/* <div className="h-full min-h-[300px] md:col-span-2">
           <BalanceTrendChart data={balanceTrendData} />
-        </div>
+        </div> */}
       </section>
 
       <section>
@@ -339,7 +311,7 @@ export default function DashboardPage() {
           onResetFilters={resetFilters}
         />
         <TransactionsTable
-          transactions={filteredTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())}
+          transactions={transactions}
           onEdit={openEditDialog}
           onDelete={openDeleteDialog}
         />
@@ -368,18 +340,18 @@ export default function DashboardPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <AlertTriangle className="mr-2 h-6 w-6 text-red-500" />
-              Confirm Deletion
+              Konfirmasi Penghapusan
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this transaction? This action cannot be undone.
+              Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              Batal
             </Button>
             <Button variant="destructive" onClick={handleDeleteTransaction}>
-              Delete
+              Hapus
             </Button>
           </div>
         </DialogContent>
