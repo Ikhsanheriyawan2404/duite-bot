@@ -74,7 +74,7 @@ POST http://localhost:8080/auth/magic-login
 Content-Type: application/json
 
 {
-  "token": "tok_8e333bd01378fda6423ac876d2eca2c8c64e89d67d43856ab50915c90e9c6150"
+  "token": "tok_85d90f0abf79cf3e55fcea7dc1148fb7cc7a421a8b46169be0d729e83512e493"
 }
 
 
@@ -97,7 +97,7 @@ Authorization: {{refresh.response.body.access_token}}
 }
 
 ### Create transaction
-POST http://localhost:8080/transactions
+POST http://localhost:8080/transactions?type=expense&category=food&start_date=2024-01-01&end_date=2024-01-31
 Content-Type: application/json
 Authorization: {{refresh.response.body.access_token}}
 

@@ -1,8 +1,7 @@
 import { AuthResponse, User } from "@/lib/types"
 import { saveTokens, getRefreshToken } from "../lib/authToken"
 
-// const API_BASE = import.meta.env.GATEWAY_API_URL
-const API_BASE = 'http://localhost:8080'
+const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
 
 export async function magicLogin(token: string): Promise<void> {
   const res = await fetch(`${API_BASE}/auth/magic-login`, {

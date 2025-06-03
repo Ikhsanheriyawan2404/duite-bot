@@ -22,7 +22,7 @@ import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from 
 import { format } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { getMe, magicLogin } from "@/api/auth"
-import { fetchTransactions } from "@/api/transactions"
+import { createTransaction, deleteTransaction, fetchTransactions, updateTransaction } from "@/api/transactions"
 import { formatDate } from "@/lib/utils"
 
 const initialTransactions: Transaction[] = []
@@ -40,7 +40,6 @@ export default function DashboardPage() {
         dateRange.from,
         dateRange.to
       );
-      console.log({fetched})
       setTransactions(fetched);
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
@@ -188,35 +187,55 @@ export default function DashboardPage() {
   //   return trend
   // }, [transactions, initialTransactions])
 
-  const handleAddTransaction = useCallback((values: Omit<Transaction, "id">) => {
-    // setTransactions((prev) =>
-    //   [...prev, { ...values, id: crypto.randomUUID() }].sort(
-    //     (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime(), // Sort by date asc for consistency
-    //   ),
-    // )
-    setIsAddDialogOpen(false)
-  }, [])
+  const handleAddTransaction = useCallback(
+    async (values: Omit<Transaction, "id">) => {
+      try {
+        console.log(values)
+        const created = await createTransaction(values)
+        setTransactions((prev) =>
+          [...prev, created].sort(
+            (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+          )
+        )
+        setIsAddDialogOpen(false)
+      } catch (err) {
+        console.error("Gagal tambah transaksi", err)
+      }
+    },
+    []
+  )  
 
   const handleEditTransaction = useCallback(
-    (values: Omit<Transaction, "id">) => {
+    async (values: Omit<Transaction, "id">) => {
       if (!currentTransaction) return
-      // setTransactions((prev) =>
-      //   prev
-      //     .map((t) => (t.id === currentTransaction.id ? { ...values, id: t.id } : t))
-      //     .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()),
-      // )
-      setIsEditDialogOpen(false)
-      setCurrentTransaction(undefined)
+      try {
+        const updated = await updateTransaction(currentTransaction.id, values)
+        setTransactions((prev) =>
+          prev
+            .map((t) => (t.id === currentTransaction.id ? updated : t))
+            .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime())
+        )
+        setIsEditDialogOpen(false)
+        setCurrentTransaction(undefined)
+      } catch (err) {
+        console.error("Gagal update transaksi", err)
+      }
     },
-    [currentTransaction],
+    [currentTransaction]
   )
 
-  const handleDeleteTransaction = useCallback(() => {
+  const handleDeleteTransaction = useCallback(async () => {
     if (!transactionToDeleteId) return
-    setTransactions((prev) => prev.filter((t) => t.id !== transactionToDeleteId))
-    setIsDeleteDialogOpen(false)
-    setTransactionToDeleteId(null)
+    try {
+      await deleteTransaction(transactionToDeleteId)
+      setTransactions((prev) => prev.filter((t) => t.id !== transactionToDeleteId))
+      setIsDeleteDialogOpen(false)
+      setTransactionToDeleteId(null)
+    } catch (err) {
+      console.error("Gagal hapus transaksi", err)
+    }
   }, [transactionToDeleteId])
+  
 
   const openEditDialog = (transaction: Transaction) => {
     setCurrentTransaction(transaction)
@@ -252,6 +271,12 @@ export default function DashboardPage() {
               <DialogTitle>Tambah Transaksi Baru</DialogTitle>
               <DialogDescription>Lengkapi rincian transaksi baru Anda.</DialogDescription>
             </DialogHeader>
+            {/* <TransactionForm
+              defaultValues={currentTransaction}
+              onSubmit={handleEditTransaction}
+              onCancel={() => setIsEditDialogOpen(false)}
+            /> */}
+
             <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsAddDialogOpen(false)} />
           </DialogContent>
         </Dialog>

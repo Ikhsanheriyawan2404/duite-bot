@@ -2,9 +2,7 @@ import { Transaction } from "@/lib/types"
 import { getAccessToken } from "../lib/authToken"
 import { refreshToken } from "./auth"
 
-const API_BASE = 'http://localhost:8080'
-// const API_BASE = import.meta.env.GATEWAY_API_URL
-console.log({API_BASE})
+const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
 
 async function fetchWithAuth(input: string, init?: RequestInit): Promise<Response> {
   const token = getAccessToken()
@@ -67,6 +65,12 @@ export async function updateTransaction(id: string, data: Omit<Transaction, "id"
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error("Failed to update transaction")
+  return res.json()
+}
+
+export async function getTransactionById(id: string): Promise<Transaction> {
+  const res = await fetchWithAuth(`/transactions/${id}`)
+  if (!res.ok) throw new Error("Failed to fetch transaction detail")
   return res.json()
 }
 

@@ -2,7 +2,7 @@ export type TransactionType = "INCOME" | "EXPENSE"
 
 export interface Transaction {
   id: string
-  transaction_date: Date
+  transaction_date: string
   original_text: string
   category: string
   amount: number
