@@ -7,8 +7,8 @@ import (
 	"finance-bot/config"
 	"finance-bot/model"
 	"finance-bot/service"
-	"finance-bot/utils"
 	"finance-bot/static"
+	"finance-bot/utils"
 
 	"fmt"
 	"io"
@@ -30,9 +30,9 @@ type ChatMessage struct {
 }
 
 type ChatRequest struct {
-	Model string `json:"model"`
-	Messages []ChatMessage `json:"messages"`
-	MaxTokens int `json:"max_tokens,omitempty"`
+	Model          string         `json:"model"`
+	Messages       []ChatMessage  `json:"messages"`
+	MaxTokens      int            `json:"max_tokens,omitempty"`
 	ResponseFormat map[string]any `json:"response_format,omitempty"`
 }
 
@@ -49,14 +49,14 @@ type ChatResponse struct {
 }
 
 type Result struct {
-	TransactionType string `json:"type"`
-	Amount float64 `json:"amount"`
-	Category string `json:"category"`
-	Date string `json:"date"`
+	TransactionType string  `json:"type"`
+	Amount          float64 `json:"amount"`
+	CategoryID      *uint   `json:"category_id"`
+	Date            string  `json:"date"`
 }
 
 type UserHandler struct {
-	userService service.UserService
+	userService        service.UserService
 	transactionService service.TransactionService
 }
 
@@ -76,7 +76,7 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 			"error": "Invalid user ID",
 		})
 	}
-	
+
 	user, err := h.userService.GetByChatId(userId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -98,7 +98,7 @@ func (h *UserHandler) GetTransactions(c *fiber.Ctx) error {
 	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 	income := make([]float64, 12)
 	expense := make([]float64, 12)
-	pieMap := make(map[string]float64)
+	pieMap := make(map[uint]float64)
 
 	for _, t := range *transactions {
 		month := int(t.TransactionDate.Month()) - 1
@@ -110,15 +110,15 @@ func (h *UserHandler) GetTransactions(c *fiber.Ctx) error {
 			income[month] += t.Amount
 		} else if t.TransactionType == "EXPENSE" {
 			expense[month] += t.Amount
-			pieMap[t.Category] += t.Amount
+			pieMap[*t.CategoryID] += t.Amount
 		}
 	}
 
 	type pieEntry struct {
-		Category string
+		Category uint
 		Amount   float64
 	}
-	
+
 	var piceSlice []pieEntry
 	for k, v := range pieMap {
 		piceSlice = append(piceSlice, pieEntry{Category: k, Amount: v})
@@ -128,16 +128,16 @@ func (h *UserHandler) GetTransactions(c *fiber.Ctx) error {
 		return piceSlice[i].Amount > piceSlice[j].Amount
 	})
 
-	finalPieMap := make(map[string]float64)
+	finalPieMap := make(map[uint]float64)
 	for i, entry := range piceSlice {
 		if i < 5 {
 			finalPieMap[entry.Category] = entry.Amount
 		} else {
-			finalPieMap["lainnya"] += entry.Amount
+			finalPieMap[0] += entry.Amount
 		}
 	}
 
-	var pieLabels []string
+	var pieLabels []uint
 	var pieData []float64
 	for k, v := range finalPieMap {
 		pieLabels = append(pieLabels, k)
@@ -149,8 +149,8 @@ func (h *UserHandler) GetTransactions(c *fiber.Ctx) error {
 		"line": fiber.Map{
 			"labels": months,
 			"datasets": []fiber.Map{
-				{ "label": "Pemasukan", "data": income },
-				{ "label": "Pengeluaran", "data": expense },
+				{"label": "Pemasukan", "data": income},
+				{"label": "Pengeluaran", "data": expense},
 			},
 		},
 		"pie": fiber.Map{
@@ -230,7 +230,7 @@ func (h *UserHandler) CheckUser(c *fiber.Ctx) error {
 	chatId, _ := strconv.ParseInt(idParam, 10, 64)
 
 	exist := h.userService.CheckUser(chatId)
-	if (! exist) {
+	if !exist {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"exist": exist,
 		})
@@ -265,7 +265,7 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 
 			"help": "Contoh: 'Makan siang 25k' atau 'gaji masuk 1000'",
 		})
-	}	
+	}
 
 	// Step 1: Klasifikasi menggunakan LLM
 	fullPrompt := fmt.Sprintf(static.PromptDefault, time.Now().Format("2006-01-02"), input.Prompt)
@@ -278,7 +278,7 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 	}
 
 	// Step 2: Validasi hasil klasifikasi
-	if result.TransactionType != string(model.INCOME) && result.TransactionType != string(model.EXPENSE) {
+	if result.TransactionType != string(model.TransactionTypeINCOME) && result.TransactionType != string(model.TransactionTypeEXPENSE) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
 		})
@@ -291,14 +291,14 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 	} else {
 		transactionDate = time.Now() // jika kosong, fallback ke sekarang
 	}
-	
+
 	// Step 3: Simpan transaksi
 	tx := &model.Transaction{
 		ChatID:          chatId,
 		OriginalText:    input.Prompt,
 		TransactionType: model.TransactionType(result.TransactionType),
 		Amount:          result.Amount,
-		Category:        result.Category,
+		CategoryID:      result.CategoryID,
 		TransactionDate: transactionDate,
 	}
 
@@ -323,7 +323,7 @@ func hitDeepSeek(prompt string) (*Result, *ChatResponse, error) {
 		Messages: []ChatMessage{
 			{Role: "user", Content: prompt},
 		},
-		ResponseFormat: map[string]any{ 
+		ResponseFormat: map[string]any{
 			"type": "json_object",
 		},
 	}
@@ -331,7 +331,7 @@ func hitDeepSeek(prompt string) (*Result, *ChatResponse, error) {
 	jsonBody, _ := json.Marshal(requestBody)
 	req, _ := http.NewRequest("POST", config.AppConfig.LLMApiUrl, bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + config.AppConfig.LLMApiKey)
+	req.Header.Set("Authorization", "Bearer "+config.AppConfig.LLMApiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -396,8 +396,6 @@ func (h *UserHandler) GenerateMagicLink(c *fiber.Ctx) error {
 
 	var req request
 	if err := c.BodyParser(&req); err != nil {
-		fmt.Println("BodyParser error:", err) // ✅ DEBUG INI
-
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request")
 	}
 
@@ -405,8 +403,6 @@ func (h *UserHandler) GenerateMagicLink(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Magic login link generated",
-		"token": token,
+		"token":   token,
 	})
 }
-
-

@@ -29,6 +29,7 @@ func ConnectDB() *gorm.DB {
 
 	db.AutoMigrate(&model.Transaction{})
 	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Category{})
 
 	return db
 }
