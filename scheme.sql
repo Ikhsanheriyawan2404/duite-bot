@@ -18,13 +18,24 @@ CREATE TABLE categories (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-INSERT INTO categories (name, type, parent_id, user_id) VALUES
-('Gaji & Pendapatan', 'INCOME', NULL, NULL),
-('Pendapatan Sampingan', 'INCOME', NULL, NULL),
-('Investasi', 'INCOME', NULL, NULL),
-('Pengeluaran Harian', 'EXPENSE', NULL, NULL),
-('Tagihan & Cicilan', 'EXPENSE', NULL, NULL),
-('Tabungan & Dana Darurat', 'EXPENSE', NULL, NULL);
+INSERT INTO categories (name, type, created_at) VALUES
+-- INCOME
+('Gaji & Pendapatan Tetap', 'INCOME', NOW()),
+('Pendapatan Lain / Usaha', 'INCOME', NOW()),
+('Investasi & Bunga', 'INCOME', NOW()),
+('Hadiah & Lain-lain', 'INCOME', NOW()),
+
+-- EXPENSE
+('Kebutuhan Harian', 'EXPENSE', NOW()),
+('Transportasi', 'EXPENSE', NOW()),
+('Tagihan & Cicilan', 'EXPENSE', NOW()),
+('Kesehatan', 'EXPENSE', NOW()),
+('Pendidikan', 'EXPENSE', NOW()),
+('Hiburan & Sosial', 'EXPENSE', NOW()),
+('Tabungan & Investasi', 'EXPENSE', NOW()),
+('Lain-lain Pengeluaran', 'EXPENSE', NOW()),
+('Donasi', 'EXPENSE', NOW()),
+('Belanja Online', 'EXPENSE', NOW());
 
 CREATE TABLE transactions (
   id BIGSERIAL PRIMARY KEY,
