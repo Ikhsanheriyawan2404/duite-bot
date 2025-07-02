@@ -17,6 +17,8 @@ import { ExpenseCategoryPieChart } from "@/components/dashboard/expense-category
 import { BalanceTrendChart } from "@/components/dashboard/balance-trend-chart" // New
 import { TransactionsTable } from "@/components/dashboard/transactions-table"
 import { TransactionForm } from "@/components/dashboard/transaction-form"
+import { ThemeToggle } from "@/components/theme-toggle"
+
 import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData } from "@/lib/types"
 import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from "lucide-react"
 import { format } from "date-fns"
@@ -260,26 +262,24 @@ export default function DashboardPage() {
     <div className="container mx-auto p-4 md:p-8 space-y-8 bg-background text-foreground min-h-screen">
       <header className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
         <h1 className="text-3xl font-bold tracking-tight">Duite Dashboard</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Buat Transaksi
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Tambah Transaksi Baru</DialogTitle>
-              <DialogDescription>Lengkapi rincian transaksi baru Anda.</DialogDescription>
-            </DialogHeader>
-            {/* <TransactionForm
-              defaultValues={currentTransaction}
-              onSubmit={handleEditTransaction}
-              onCancel={() => setIsEditDialogOpen(false)}
-            /> */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Buat Transaksi
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Tambah Transaksi Baru</DialogTitle>
+                <DialogDescription>Lengkapi rincian transaksi baru Anda.</DialogDescription>
+              </DialogHeader>
 
-            <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsAddDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+              <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsAddDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
 
       <div className="flex items-center justify-between">
