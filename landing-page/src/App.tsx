@@ -35,9 +35,9 @@ export default function App() {
             <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
               Harga
             </a>
-            <Button variant="outline" size="sm">
+            {/* <Button variant="outline" size="sm">
               Masuk
-            </Button>
+            </Button> */}
             <Button size="sm">Join Sekarang</Button>
           </nav>
         </div>
@@ -322,7 +322,7 @@ export default function App() {
                   </li>
                   <li className="flex items-center">
                     <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                    <span>Ekspor data (CSV, PDF)</span>
+                    <span>Ekspor data (CSV, EXCEL, PDF)</span>
                   </li>
                 </ul>
               </div>
@@ -561,11 +561,11 @@ export default function App() {
                     WhatsApp Bot
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a href="https://www.instagram.com/ikhsanheriyawan/" className="hover:text-white transition-colors">
                     Instagram
                   </a>
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>
