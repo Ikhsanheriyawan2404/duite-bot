@@ -290,8 +290,8 @@ func handleTransactionInput(chatID int64, inputMessage string, bot *tgbotapi.Bot
 		"✅ Transaksi berhasil dicatat!\n\n📂 Tipe: %s\n💰 Jumlah: %s\n🏷️ Kategori: %s\n🗓️ Tanggal: %s",
 		apiResponse.Data.TransactionType,
 		utils.FormatRupiah(apiResponse.Data.Amount),
-		apiResponse.Data.Category,
-		apiResponse.Data.TransactionDate.Format("2006-01-02"),
+		apiResponse.Data.Category.Name,
+		utils.FormatDateCustom(apiResponse.Data.TransactionDate, "id-full"),
 	)
 
 	msg := tgbotapi.NewMessage(chatID, reply)

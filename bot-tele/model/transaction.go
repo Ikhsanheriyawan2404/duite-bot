@@ -13,7 +13,8 @@ type Transaction struct {
 	ID              uint            `json:"id"`
 	TransactionType TransactionType `json:"transaction_type"`
 	Amount          float64         `json:"amount"`
-	Category        string          `json:"category"`
+	CategoryID      *uint           `json:"category_id"`
+	Category        *Category       `json:"category,omitempty"`
 	Description     string          `json:"description"`
 	TransactionDate time.Time       `json:"transaction_date"`
 	ChatID          int64           `json:"chat_id"`

@@ -189,3 +189,101 @@ func IsCommand(input string) bool {
 	_, isValid := validCommands[firstWord]
 	return isValid
 }
+
+// Format date ke bahasa Indonesia
+func FormatDateIndonesian(t time.Time) string {
+	monthNames := map[time.Month]string{
+		time.January:   "Januari",
+		time.February:  "Februari",
+		time.March:     "Maret",
+		time.April:     "April",
+		time.May:       "Mei",
+		time.June:      "Juni",
+		time.July:      "Juli",
+		time.August:    "Agustus",
+		time.September: "September",
+		time.October:   "Oktober",
+		time.November:  "November",
+		time.December:  "Desember",
+	}
+	
+	return fmt.Sprintf("%d %s %d", t.Day(), monthNames[t.Month()], t.Year())
+}
+
+// Format date ke bahasa Indonesia pendek
+func FormatDateIndonesianShort(t time.Time) string {
+	monthNames := map[time.Month]string{
+		time.January:   "Jan",
+		time.February:  "Feb",
+		time.March:     "Mar",
+		time.April:     "Apr",
+		time.May:       "Mei",
+		time.June:      "Jun",
+		time.July:      "Jul",
+		time.August:    "Ags",
+		time.September: "Sep",
+		time.October:   "Okt",
+		time.November:  "Nov",
+		time.December:  "Des",
+	}
+	
+	return fmt.Sprintf("%d %s %d", t.Day(), monthNames[t.Month()], t.Year())
+}
+
+// Format dengan hari dalam bahasa Indonesia
+func FormatDateTimeIndonesian(t time.Time) string {
+	dayNames := map[time.Weekday]string{
+		time.Sunday:    "Minggu",
+		time.Monday:    "Senin",
+		time.Tuesday:   "Selasa",
+		time.Wednesday: "Rabu",
+		time.Thursday:  "Kamis",
+		time.Friday:    "Jumat",
+		time.Saturday:  "Sabtu",
+	}
+	
+	monthNames := map[time.Month]string{
+		time.January:   "Januari",
+		time.February:  "Februari",
+		time.March:     "Maret",
+		time.April:     "April",
+		time.May:       "Mei",
+		time.June:      "Juni",
+		time.July:      "Juli",
+		time.August:    "Agustus",
+		time.September: "September",
+		time.October:   "Oktober",
+		time.November:  "November",
+		time.December:  "Desember",
+	}
+	
+	return fmt.Sprintf("%s, %d %s %d", 
+		dayNames[t.Weekday()], 
+		t.Day(), 
+		monthNames[t.Month()], 
+		t.Year())
+}
+
+// Format berbagai pilihan
+func FormatDateCustom(t time.Time, format string) string {
+	switch format {
+	case "iso":
+		return t.Format("2006-01-02")
+	case "iso-time":
+		return t.Format("2006-01-02 15:04:05")
+	case "iso-full":
+		return t.Format(time.RFC3339)
+	case "id":
+		return FormatDateIndonesian(t)
+	case "id-short":
+		return FormatDateIndonesianShort(t)
+	case "id-full":
+		return FormatDateTimeIndonesian(t)
+	case "us":
+		return t.Format("January 02, 2006")
+	case "us-short":
+		return t.Format("Jan 02, 2006")
+	default:
+		return t.Format("2006-01-02")
+	}
+}
