@@ -58,12 +58,14 @@ type Result struct {
 type UserHandler struct {
 	userService        service.UserService
 	transactionService service.TransactionService
+	categoryService    service.CategoryService
 }
 
-func NewUserHandler(userService service.UserService, transactionService service.TransactionService) *UserHandler {
+func NewUserHandler(userService service.UserService, transactionService service.TransactionService, categoryService service.CategoryService) *UserHandler {
 	return &UserHandler{
 		userService:        userService,
 		transactionService: transactionService,
+		categoryService: 	categoryService,
 	}
 }
 

@@ -38,7 +38,10 @@ func main() {
 	transactionRepo := repository.NewTransactionRepository(db)
 	transactionService := service.NewTransactionService(transactionRepo)
 
-    userHandler := handler.NewUserHandler(userService, transactionService)
+	categoryRepo := repository.NewCategoryRepository(db)
+	categoryService := service.NewCategoryService(categoryRepo)
+	
+    userHandler := handler.NewUserHandler(userService, transactionService, categoryService)
 
 	app := fiber.New()
 
