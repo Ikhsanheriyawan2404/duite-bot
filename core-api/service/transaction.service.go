@@ -8,6 +8,7 @@ import (
 type TransactionService interface {
     CountTransactionsById(chatID int64) (int64, error)
 	CreateTransaction(tx *model.Transaction) error
+	GetTransactionWithCategory(id uint) (*model.Transaction, error)
 }
 
 type transactionService struct {
@@ -24,6 +25,10 @@ func (s *transactionService) CountTransactionsById(chatID int64) (int64, error) 
 
 func (s *transactionService) CreateTransaction(tx *model.Transaction) error {
     return s.transactionRepo.CreateTransaction(tx)
+}
+
+func (s *transactionService) GetTransactionWithCategory(id uint) (*model.Transaction, error) {
+    return s.transactionRepo.GetTransactionWithCategory(id)
 }
 
 

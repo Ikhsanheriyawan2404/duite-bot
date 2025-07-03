@@ -308,11 +308,18 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 		})
 	}
 
+	txWithCategory, err := h.transactionService.GetTransactionWithCategory(tx.ID)
+	if err != nil {
+		// Log error tapi tetap return success karena create sudah berhasil
+		log.Printf("Failed to load category: %v", err)
+		txWithCategory = tx // fallback ke transaction tanpa category
+	}
+
 	// Step 4: Respon sukses
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+	return utils.JSONResponse(c, fiber.StatusCreated, fiber.Map{
 		"message": "Transaksi berhasil disimpan",
 		"usage":   llmResp.Usage,
-		"data":    tx,
+		"data":    txWithCategory,
 	})
 }
 
