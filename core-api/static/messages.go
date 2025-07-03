@@ -65,38 +65,30 @@ Output must be in Bahasa Indonesia.
 */
 
 // Versi 1.5.0 peningkatan grounding category & dinamis category
-const PromptDefault = `
-Current date is: "%s
+//========================================== first prompt template
+// 1. Transaction type classification
+const PromptTypeClassification = `
+Transaction:
+"%s"
 
-Analyze the following transaction description:
-"%s
+Reply *only* in JSON:
+{"type":"INCOME"|"EXPENSE"}
+`
+//========================================== first prompt template
+
+//========================================== second prompt template
+// 2. Full extraction: type, amount, category, date
+const PromptFullClassification = `
+Current Date: "%s"
+Transaction: "%s"
+Type (INCOME/EXPENSE): "%s"
 
 Interpret any relative time expressions based on the current date above.
 
-Extract and reply in JSON format only:
-{
-	"type": "INCOME|EXPENSE",
-	"amount": number,
-	"category_id": number,
-	"date": "YYYY-MM-DD" or null
-}
+Reply *only* in JSON:
+{"type": "%s","amount": number,"category_id": number,"date": "YYYY-MM-DD" or null}
 
 Use one of these categories:
-
-#1 Gaji & Pendapatan Tetap
-#2 Pendapatan Lain / Usaha
-#3 Investasi & Bunga
-#4 Hadiah & Lain-lain
-#5 Kebutuhan Harian
-#6 Transportasi
-#7 Tagihan & Cicilan
-#8 Kesehatan
-#9 Pendidikan
-#10 Hiburan & Sosial
-#11 Tabungan & Investasi
-#12 Lain-lain Pengeluaran
-#13 Donasi
-#14 Belanja Online
-
-Output must be in Bahasa Indonesia.
+%s
 `
+//========================================== second prompt template

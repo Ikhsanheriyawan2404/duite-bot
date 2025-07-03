@@ -40,8 +40,22 @@ func main() {
 
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(categoryRepo)
+
+	// Create LLM service
+	// aiService := service.NewLLMService(
+	// 	service.ProviderDeepSeek,
+	// 	config.AppConfig.LLMApiKey,
+	// 	"https://api.deepseek.com/v1/chat/completions",
+	// 	"deepseek-chat",
+	// )
+	aiService := service.NewLLMService(
+		service.ProviderChatGPT,
+		config.AppConfig.LLMApiKey,
+		"",
+		"gpt-4.1-nano",
+	)
 	
-    userHandler := handler.NewUserHandler(userService, transactionService, categoryService)
+    userHandler := handler.NewUserHandler(userService, transactionService, categoryService, *aiService)
 
 	app := fiber.New()
 

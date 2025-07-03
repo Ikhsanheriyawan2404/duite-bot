@@ -1,52 +1,18 @@
 package handler
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"finance-bot/config"
 	"finance-bot/model"
 	"finance-bot/service"
-	"finance-bot/static"
 	"finance-bot/utils"
 
-	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"sort"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
-type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type ChatRequest struct {
-	Model          string         `json:"model"`
-	Messages       []ChatMessage  `json:"messages"`
-	MaxTokens      int            `json:"max_tokens,omitempty"`
-	ResponseFormat map[string]any `json:"response_format,omitempty"`
-}
-
-type ChatResponse struct {
-	Choices []struct {
-		Message ChatMessage `json:"message"`
-	} `json:"choices"`
-
-	Usage struct {
-		PromptTokens     int `json:"prompt_tokens"`
-		CompletionTokens int `json:"completion_tokens"`
-		TotalTokens      int `json:"total_tokens"`
-	} `json:"usage"`
-}
 
 type Result struct {
 	TransactionType string  `json:"type"`
@@ -59,13 +25,21 @@ type UserHandler struct {
 	userService        service.UserService
 	transactionService service.TransactionService
 	categoryService    service.CategoryService
+	aiService   	   service.LLMService
 }
 
-func NewUserHandler(userService service.UserService, transactionService service.TransactionService, categoryService service.CategoryService) *UserHandler {
+func NewUserHandler(
+		userService service.UserService,
+		transactionService service.TransactionService,
+		categoryService service.CategoryService,
+		aiService service.LLMService,
+	) *UserHandler {
+	
 	return &UserHandler{
 		userService:        userService,
 		transactionService: transactionService,
 		categoryService: 	categoryService,
+		aiService:  	 	aiService,
 	}
 }
 
@@ -242,6 +216,24 @@ func (h *UserHandler) CheckUser(c *fiber.Ctx) error {
 	})
 }
 
+func (h *UserHandler) GenerateMagicLink(c *fiber.Ctx) error {
+	type request struct {
+		ChatID int64 `json:"chat_id"`
+	}
+
+	var req request
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request")
+	}
+
+	token, _ := h.userService.GenerateMagicLoginToken(req.ChatID)
+
+	return c.JSON(fiber.Map{
+		"message": "Magic login link generated",
+		"token":   token,
+	})
+}
+
 func (h *UserHandler) ParseAndSaveTransaction(c *fiber.Ctx) error {
 	chatIdParam := c.Params("chatId")
 	chatId, _ := strconv.ParseInt(chatIdParam, 10, 64)
@@ -269,22 +261,47 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 		})
 	}
 
-	// Step 1: Klasifikasi menggunakan LLM
-	fullPrompt := fmt.Sprintf(static.PromptDefault, time.Now().Format("2006-01-02"), input.Prompt)
-	// result, llmResp, err := hitDeepSeek(fullPrompt)
-	result, llmResp, err := hitChatGpt(fullPrompt)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
+	// Step 0: Get Category Data
+	typeRes, _, err := h.aiService.ClassifyTransactionType(input.Prompt)
+    if err != nil {
+		log.Printf("Klasifikasi Type: %v", err)
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~"})
+    }
+	
+	// Validasi hasil klasifikasi
+	if typeRes.TransactionType != string(model.TransactionTypeINCOME) &&
+	typeRes.TransactionType != string(model.TransactionTypeEXPENSE) {
+		// Log actual value dari TransactionType supaya kita tahu apa yang dikembalikan LLM
+		log.Printf("DEBUG: invalid transaction type from LLM: %q", typeRes.TransactionType)
+
+		// Kalau kamu ingin tahu raw chat response juga, pastikan kamu simpan chatResp di outer scope:
+		// log.Printf("DEBUG: raw LLM response: %s", chatResp.Choices[0].Message.Content)
+
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi ya~",
 		})
 	}
 
-	// Step 2: Validasi hasil klasifikasi
-	if result.TransactionType != string(model.TransactionTypeINCOME) && result.TransactionType != string(model.TransactionTypeEXPENSE) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	filterCategories, err := h.categoryService.GetDefaultCategoriesByType(
+        model.CategoryType(typeRes.TransactionType),
+    )
+	if err != nil {
+		log.Printf("Load Categories: %v", err)
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~"})
+    }
+
+	// Step 1: Klasifikasi menggunakan LLM
+	result, llmResp, err := h.aiService.ClassifyTransactionFull(
+        input.Prompt,
+        typeRes.TransactionType,
+        filterCategories,
+    )
+    if err != nil {
+		log.Printf("Klasifikasi Full: %v", err)
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "😓 Aduh, sistem lagi ngambek. Coba lagi lagi ya~",
 		})
-	}
+    }
 
 	var transactionDate time.Time
 	if result.Date != "" {
@@ -322,96 +339,5 @@ Biar aku bantuin kamu jadi lebih rapih ngatur duit!`,
 		"message": "Transaksi berhasil disimpan",
 		"usage":   llmResp.Usage,
 		"data":    txWithCategory,
-	})
-}
-
-func hitDeepSeek(prompt string) (*Result, *ChatResponse, error) {
-
-	requestBody := ChatRequest{
-		Model: "deepseek-chat",
-		Messages: []ChatMessage{
-			{Role: "user", Content: prompt},
-		},
-		ResponseFormat: map[string]any{
-			"type": "json_object",
-		},
-	}
-
-	jsonBody, _ := json.Marshal(requestBody)
-	req, _ := http.NewRequest("POST", config.AppConfig.LLMApiUrl, bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+config.AppConfig.LLMApiKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	var chatResp ChatResponse
-	json.Unmarshal(body, &chatResp)
-	jsonStr := chatResp.Choices[0].Message.Content
-
-	var result Result
-	json.Unmarshal([]byte(jsonStr), &result)
-
-	return &result, &chatResp, err
-}
-
-func hitChatGpt(prompt string) (*Result, *ChatResponse, error) {
-
-	client := openai.NewClient(
-		option.WithAPIKey(config.AppConfig.LLMApiKey), // Gantilah dengan API key Anda
-	)
-
-	chatCompletion, err := client.Chat.Completions.New(
-		context.TODO(),
-		openai.ChatCompletionNewParams{
-			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.UserMessage(prompt),
-			},
-			Model: "gpt-4.1-nano",
-			ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
-				OfJSONObject: &shared.ResponseFormatJSONObjectParam{
-					Type: "json_object",
-				},
-			},
-		},
-	)
-	if err != nil {
-		panic(err.Error())
-	}
-	jsonBytes, err := json.MarshalIndent(chatCompletion, "", "  ")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var chatResp ChatResponse
-	json.Unmarshal(jsonBytes, &chatResp)
-	jsonStr := chatResp.Choices[0].Message.Content
-
-	var result Result
-	json.Unmarshal([]byte(jsonStr), &result)
-
-	return &result, &chatResp, nil
-}
-
-func (h *UserHandler) GenerateMagicLink(c *fiber.Ctx) error {
-	type request struct {
-		ChatID int64 `json:"chat_id"`
-	}
-
-	var req request
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request")
-	}
-
-	token, _ := h.userService.GenerateMagicLoginToken(req.ChatID)
-
-	return c.JSON(fiber.Map{
-		"message": "Magic login link generated",
-		"token":   token,
 	})
 }
