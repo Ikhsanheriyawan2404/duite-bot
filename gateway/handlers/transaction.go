@@ -97,8 +97,8 @@ func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {
 	}
 
 	// Optional filter: category
-	if category := c.Query("category"); category != "" {
-		query = query.Where("category = ?", category)
+	if category := c.Query("category_id"); category != "" {
+		query = query.Where("category_id = ?", category)
 	}
 
 	// Optional filter: date range
