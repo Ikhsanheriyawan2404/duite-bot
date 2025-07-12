@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { CalendarIcon, XIcon } from "lucide-react"
 import { format } from "date-fns"
 import type { DateRange } from "react-day-picker"
+import { Category } from "@/lib/types"
 
 interface TransactionFiltersProps {
   dateRange: DateRange | undefined
@@ -16,7 +17,7 @@ interface TransactionFiltersProps {
   onSelectedTypeChange: (type: string) => void
   selectedCategory: string
   onSelectedCategoryChange: (category: string) => void
-  categories: string[]
+  categories: Category[]
   onResetFilters: () => void
 }
 
@@ -96,9 +97,12 @@ export function TransactionFilters({
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem key="all" value="all">
+                Semua Kategori
+              </SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category === "all" ? "Semua Kategori" : category}
+                <SelectItem key={category.id} value={String(category.id)}>
+                  {category.name}
                 </SelectItem>
               ))}
             </SelectContent>

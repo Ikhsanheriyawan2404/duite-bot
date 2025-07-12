@@ -16,15 +16,16 @@ import { FinancialChart } from "@/components/dashboard/financial-chart" // Month
 import { ExpenseCategoryPieChart } from "@/components/dashboard/expense-category-pie-chart" // New
 import { BalanceTrendChart } from "@/components/dashboard/balance-trend-chart" // New
 import { TransactionsTable } from "@/components/dashboard/transactions-table"
-import { TransactionForm } from "@/components/dashboard/transaction-form"
+import { TransactionForm} from "@/components/dashboard/transaction-form"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData } from "@/lib/types"
+import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData, Category } from "@/lib/types"
 import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from "lucide-react"
 import { format } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { getMe, magicLogin } from "@/api/auth"
 import { createTransaction, deleteTransaction, fetchTransactions, updateTransaction } from "@/api/transactions"
+import { fetchCategories } from "@/api/categories"
 import { formatDate } from "@/lib/utils"
 
 const initialTransactions: Transaction[] = []
@@ -48,7 +49,17 @@ export default function DashboardPage() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const fetchedCategories = await fetchCategories();
+      setCategories(fetchedCategories);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions)
+  const [categories, setCategories] = useState<Category[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -80,10 +91,11 @@ export default function DashboardPage() {
 
         // lanjutkan login menggunakan token yang sudah disimpan
         await getMe()
+        await loadCategories();
         await loadFilterTransactions();
       } catch (err) {
         console.error("Login or fetch error:", err)
-        // optional: redirect ke halaman login
+        alert("gagal login")
       }
     }
 
@@ -94,10 +106,6 @@ export default function DashboardPage() {
     loadFilterTransactions();
   }, [selectedType, selectedCategory, dateRange]);
 
-  const uniqueCategories = useMemo(() => {
-    const categories = new Set(transactions.map((t) => t.category))
-    return ["all", ...Array.from(categories).sort()]
-  }, [transactions])
 
   const summaryData = useMemo(() => {
     // Summary should reflect ALL transactions, not filtered ones
@@ -190,9 +198,8 @@ export default function DashboardPage() {
   // }, [transactions, initialTransactions])
 
   const handleAddTransaction = useCallback(
-    async (values: Omit<Transaction, "id">) => {
+    async (values: Omit<Transaction, "id" | "category">) => {
       try {
-        console.log(values)
         const created = await createTransaction(values)
         setTransactions((prev) =>
           [...prev, created].sort(
@@ -208,7 +215,7 @@ export default function DashboardPage() {
   )  
 
   const handleEditTransaction = useCallback(
-    async (values: Omit<Transaction, "id">) => {
+    async (values: Omit<Transaction, "id" | "category">) => {
       if (!currentTransaction) return
       try {
         const updated = await updateTransaction(currentTransaction.id, values)
@@ -276,7 +283,11 @@ export default function DashboardPage() {
                 <DialogDescription>Lengkapi rincian transaksi baru Anda.</DialogDescription>
               </DialogHeader>
 
-              <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsAddDialogOpen(false)} />
+              <TransactionForm
+                categories={categories}
+                onSubmit={handleAddTransaction}
+                onCancel={() => setIsAddDialogOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -332,14 +343,23 @@ export default function DashboardPage() {
           onSelectedTypeChange={setSelectedType}
           selectedCategory={selectedCategory}
           onSelectedCategoryChange={setSelectedCategory}
-          categories={uniqueCategories}
+          categories={categories}
           onResetFilters={resetFilters}
         />
-        <TransactionsTable
-          transactions={transactions}
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
-        />
+        
+        {categories.length > 0 && (
+          <TransactionsTable
+            transactions={transactions.map((transaction) => {
+              const category = categories.find((cat) => cat.id === transaction.category_id);
+              return {
+                ...transaction,
+                category: category!.name,
+              };
+            })}
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
+        )}
       </section>
 
       {/* Edit Transaction Dialog */}
@@ -352,6 +372,7 @@ export default function DashboardPage() {
           {currentTransaction && (
             <TransactionForm
               onSubmit={handleEditTransaction}
+              categories={categories}
               initialData={currentTransaction}
               onCancel={() => setIsEditDialogOpen(false)}
             />

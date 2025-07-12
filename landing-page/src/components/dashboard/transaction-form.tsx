@@ -12,12 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import type { Transaction, TransactionType } from "@/lib/types"
+import type { Category, Transaction, TransactionType } from "@/lib/types"
 
 const formSchema = z.object({
   original_text: z.string().min(1, "Keterangan wajib diisi"),
   amount: z.coerce.number().positive("Nominal tidak boleh negatif"),
-  category: z.string().min(1, "Kategori wajib diisi"),
+  category_id: z.coerce.number({
+    required_error: "Kategori wajib diisi",
+  }).min(1, { message: "Kategori wajib dipilih" }),
   transaction_type: z.enum(["INCOME", "EXPENSE"], {
     required_error: "Tipe Transaksi wajib diisi",
   }),
@@ -33,29 +35,17 @@ type TransactionFormValues = z.infer<typeof formSchema>
 interface TransactionFormProps {
   onSubmit: (values: TransactionFormValues) => void
   initialData?: Partial<Transaction>
+  categories: Category[]
   onCancel?: () => void
 }
 
-const categories = [
-  "Salary",
-  "Groceries",
-  "Utilities",
-  "Rent",
-  "Entertainment",
-  "Transport",
-  "Healthcare",
-  "Investment",
-  "Freelance",
-  "Other",
-]
-
-export function TransactionForm({ onSubmit, initialData, onCancel }: TransactionFormProps) {
+export function TransactionForm({ onSubmit, initialData, categories, onCancel }: TransactionFormProps) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
           ...initialData,
-          amount: initialData.amount || 0,
+          category_id: initialData.category_id,
           transaction_date: initialData.transaction_date
             ? format(new Date(initialData.transaction_date), "yyyy-MM-dd")
             : format(new Date(), "yyyy-MM-dd"),
@@ -64,7 +54,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
       : {
           original_text: "",
           amount: 0,
-          category: "",
+          category_id: 0,
           transaction_type: "EXPENSE",
           transaction_date: format(new Date(), "yyyy-MM-dd"),
         },
@@ -106,22 +96,19 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
         />
         <FormField
           control={form.control}
-          name="category"
+          name="transaction_type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kategori</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Tipe Transaksi</FormLabel>
+              <Select onValueChange={field.onChange as (value: TransactionType) => void} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih kategori" />
+                    <SelectValue placeholder="Select transaction type" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="INCOME">Pemasukan</SelectItem>
+                  <SelectItem value="EXPENSE">Pengeluaran</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -130,19 +117,25 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
         />
         <FormField
           control={form.control}
-          name="transaction_type"
+          name="category_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipe Transaksi</FormLabel>
-              <Select onValueChange={field.onChange as (value: TransactionType) => void} defaultValue={field.value}>
+              <FormLabel>Kategori</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select transacti  on type" />
+                    <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="INCOME">Pemasukan</SelectItem>
-                  <SelectItem value="EXPENSE">Pengeluaran</SelectItem>
+                  <SelectItem key="0" value="0">
+                      Pilih Kategori
+                  </SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={String(category.id)}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -178,7 +171,7 @@ export function TransactionForm({ onSubmit, initialData, onCancel }: Transaction
                         field.onChange(null);
                       }
                     }}
-                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                    disabled={(date) => date < new Date("1900-01-01")}
                     initialFocus
                   />
                 </PopoverContent>

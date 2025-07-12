@@ -4,6 +4,7 @@ export interface Transaction {
   id: string
   transaction_date: string
   original_text: string
+  category_id: number
   category: string
   amount: number
   transaction_type: TransactionType
@@ -39,4 +40,12 @@ export interface User {
   name: string
   chat_id: number
   uuid: string,
+}
+
+export interface Category {
+  id: number
+  name: string
+  type: string
+  created_at: string
+  updated_at: string
 }

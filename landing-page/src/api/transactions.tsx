@@ -2,8 +2,7 @@ import { Transaction } from "@/lib/types"
 import { getAccessToken } from "../lib/authToken"
 import { refreshToken } from "./auth"
 
-const API_BASE = "https://gateway-duite.brogrammer.id"
-// const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
+const API_BASE = import.meta.env.VITE_GATEWAY_API_URL
 
 async function fetchWithAuth(input: string, init?: RequestInit): Promise<Response> {
   const token = getAccessToken()
@@ -51,7 +50,7 @@ export async function fetchTransactions(
   return await res.json()
 }
 
-export async function createTransaction(data: Omit<Transaction, "id">): Promise<Transaction> {
+export async function createTransaction(data: Omit<Transaction, "id" | "category">): Promise<Transaction> {
   const res = await fetchWithAuth("/transactions", {
     method: "POST",
     body: JSON.stringify(data),
@@ -60,7 +59,7 @@ export async function createTransaction(data: Omit<Transaction, "id">): Promise<
   return res.json()
 }
 
-export async function updateTransaction(id: string, data: Omit<Transaction, "id">): Promise<Transaction> {
+export async function updateTransaction(id: string, data: Omit<Transaction, "id" | "category">): Promise<Transaction> {
   const res = await fetchWithAuth(`/transactions/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
