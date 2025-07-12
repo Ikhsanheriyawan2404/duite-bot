@@ -37,6 +37,12 @@ func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 		})
 	}
 
+	if input.CategoryID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Category ID is required",
+		})
+	}
+
 	if input.Amount <= 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Amount must be greater than 0",
@@ -161,6 +167,12 @@ func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
 	if err := h.DB.Where("id = ? AND chat_id = ?", transactionID, userID).First(&transaction).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Transaction not found",
+		})
+	}
+
+	if input.CategoryID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Category ID is required",
 		})
 	}
 
