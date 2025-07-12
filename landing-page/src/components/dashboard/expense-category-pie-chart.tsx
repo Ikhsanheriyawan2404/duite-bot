@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import type { CategoryExpenseData } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface ExpenseCategoryPieChartProps {
   data: CategoryExpenseData[]
@@ -59,8 +60,8 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
                 data={data}
                 dataKey="totalExpense"
                 nameKey="category"
-                innerRadius={60}
-                strokeWidth={5}
+                innerRadius="50%"
+                // outerRadius="80%"
               >
                 {data.map((entry, index) => (
                   <Cell
@@ -69,7 +70,15 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
                   />
                 ))}
               </Pie>
-              <ChartLegend content={<ChartLegendContent nameKey="category" />} className="-translate-y-2" />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="category" />}
+                className={cn(
+                  "flex flex-wrap gap-2",
+                  "text-xs sm:text-sm md:text-base",
+                  "justify-center md:justify-start",
+                  "-translate-y-2"
+                )}
+              />
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>

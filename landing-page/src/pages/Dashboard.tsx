@@ -20,14 +20,15 @@ import { TransactionForm} from "@/components/dashboard/transaction-form"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 import type { Transaction, MonthlyData, CategoryExpenseData, BalanceTrendData, Category } from "@/lib/types"
-import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign } from "lucide-react"
-import { format } from "date-fns"
+import { TrendingUp, TrendingDown, PlusCircle, AlertTriangle, DollarSign, UndoIcon } from "lucide-react"
+import { format, startOfMonth, endOfDay, startOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { getMe, magicLogin } from "@/api/auth"
 import { createTransaction, deleteTransaction, fetchTransactions, updateTransaction } from "@/api/transactions"
 import { fetchCategories } from "@/api/categories"
 import { formatDate } from "@/lib/utils"
 import { ResponsiveContainer } from "recharts"
+import { toast, Toaster } from "sonner"
 
 const initialTransactions: Transaction[] = []
 
@@ -35,7 +36,6 @@ export default function DashboardPage() {
   
   const loadFilterTransactions = async (fetchedCategories: Category[]) => {
     try {
-      console.log({fetchedCategories})
       const typeParam = selectedType === "all" ? undefined : selectedType;
       const categoryParam = selectedCategory === "all" ? undefined : selectedCategory;
 
@@ -81,10 +81,11 @@ export default function DashboardPage() {
   const [transactionToDeleteId, setTransactionToDeleteId] = useState<string | null>(null)
 
   const now = new Date();
-  const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+  const awalBulan = startOfMonth(now)
+  const akhirHariIni = endOfDay(now)
   const [dateRange, setDateRange] = useState<DateRange>({
     from: awalBulan,
-    to: now,
+    to: akhirHariIni,
   });
   const [selectedType, setSelectedType] = useState<string>("all")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
@@ -170,7 +171,6 @@ export default function DashboardPage() {
         categoryMap[transaction.category] = (categoryMap[transaction.category] || 0) + transaction.amount
       })
 
-      console.log({categoryMap})
     return Object.entries(categoryMap)
       .map(([category, totalExpense]) => ({ category, totalExpense }))
       .sort((a, b) => b.totalExpense - a.totalExpense) // Sort for consistent pie chart segment order
@@ -229,17 +229,24 @@ export default function DashboardPage() {
     async (values: Omit<Transaction, "id" | "category">) => {
       try {
         const created = await createTransaction(values)
+        const category = categories.find(cat => cat.id === created.category_id)
+        created.category = category!.name
         setTransactions((prev) =>
           [...prev, created].sort(
             (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
           )
         )
         setIsAddDialogOpen(false)
+        resetFilters()
+        toast.success("Transaksi berhasil ditambahkan!")
       } catch (err) {
         console.error("Gagal tambah transaksi", err)
+        if (err instanceof Error) {
+          toast.error(`Gagal tambah transaksi: ${err.message}`)
+        }
       }
     },
-    []
+    [categories]
   )  
 
   const handleEditTransaction = useCallback(
@@ -247,6 +254,8 @@ export default function DashboardPage() {
       if (!currentTransaction) return
       try {
         const updated = await updateTransaction(currentTransaction.id, values)
+        const category = categories.find(cat => cat.id === updated.category_id)
+        updated.category = category!.name
         setTransactions((prev) =>
           prev
             .map((t) => (t.id === currentTransaction.id ? updated : t))
@@ -254,11 +263,16 @@ export default function DashboardPage() {
         )
         setIsEditDialogOpen(false)
         setCurrentTransaction(undefined)
+        resetFilters()
+        toast.success("Transaksi berhasil diubah!")
       } catch (err) {
         console.error("Gagal update transaksi", err)
+        if (err instanceof Error) {
+          toast.error(`Gagal tambah transaksi: ${err.message}`)
+        }
       }
     },
-    [currentTransaction]
+    [currentTransaction, categories]
   )
 
   const handleDeleteTransaction = useCallback(async () => {
@@ -286,15 +300,17 @@ export default function DashboardPage() {
 
   const resetFilters = () => {
     const now = new Date();
-    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+    const awalBulan = startOfMonth(now)
+    const akhirHariIni = endOfDay(now)
 
-    setDateRange({ from: awalBulan, to: now });
+    setDateRange({ from: awalBulan, to: akhirHariIni });
     setSelectedType("all")
     setSelectedCategory("all")
   }
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8 bg-background text-foreground min-h-screen">
+      <Toaster />
       <header className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
         <h1 className="text-3xl font-bold tracking-tight">Duite Dashboard</h1>
         <div className="flex items-center gap-2">
@@ -396,7 +412,16 @@ export default function DashboardPage() {
 
         <TransactionFilters
           dateRange={dateRange}
-          onDateRangeChange={(range) => setDateRange(range ?? { from: undefined })}
+          onDateRangeChange={(range) => {
+            if (!range?.from) {
+              setDateRange({ from: undefined, to: undefined })
+              return;
+            }
+            const from = startOfDay(range.from);
+            const to = range.to ? endOfDay(range.to) : from;
+
+            setDateRange({ from, to });
+          }}
           selectedType={selectedType}
           onSelectedTypeChange={setSelectedType}
           selectedCategory={selectedCategory}

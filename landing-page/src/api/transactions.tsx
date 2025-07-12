@@ -55,7 +55,18 @@ export async function createTransaction(data: Omit<Transaction, "id" | "category
     method: "POST",
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error("Failed to create transaction")
+  if (!res.ok) {
+    let message = "Failed to create transaction"
+    try {
+      const errorData = await res.json()
+      if (errorData.error) {
+        message = errorData.error
+      }
+    } catch {
+      // JSON parse error fallback
+    }
+    throw new Error(message)
+  }
   return res.json()
 }
 
@@ -64,7 +75,18 @@ export async function updateTransaction(id: string, data: Omit<Transaction, "id"
     method: "PUT",
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error("Failed to update transaction")
+  if (!res.ok) {
+    let message = "Failed to create transaction"
+    try {
+      const errorData = await res.json()
+      if (errorData.error) {
+        message = errorData.error
+      }
+    } catch {
+      // JSON parse error fallback
+    }
+    throw new Error(message)
+  }
   return res.json()
 }
 
