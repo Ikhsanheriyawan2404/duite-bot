@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import type { Category, Transaction, TransactionType } from "@/lib/types"
+import { useState } from "react"
 
 const formSchema = z.object({
   original_text: z.string().min(1, "Keterangan wajib diisi"),
@@ -60,6 +61,12 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
         },
   })
 
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<TransactionType>("EXPENSE")
+  const filteredCategories = categories.filter(
+    (category) => category.type === selectedType
+  );
+
   const handleSubmit = (values: TransactionFormValues) => {
     onSubmit(values)
     form.reset()
@@ -84,15 +91,36 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
         <FormField
           control={form.control}
           name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nominal</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="e.g., 15000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const fieldValue = field.value
+              ? new Intl.NumberFormat("id-ID").format(
+                field.value
+              )
+              : ""
+            const [displayValue, setDisplayValue] = useState<string>(fieldValue);
+
+            return (
+              <FormItem>
+                <FormLabel>Nominal</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="e.g., 15.000"
+                    value={displayValue}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, ""); // Hanya angka
+                      const formatted = new Intl.NumberFormat("id-ID").format(
+                        Number(raw)
+                      );
+                      setDisplayValue(formatted);
+                      field.onChange(raw ? Number(raw) : "");
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
         <FormField
           control={form.control}
@@ -100,7 +128,13 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipe Transaksi</FormLabel>
-              <Select onValueChange={field.onChange as (value: TransactionType) => void} defaultValue={field.value}>
+              <Select
+                onValueChange={(value) => {
+                  setSelectedType(value as TransactionType);
+                  field.onChange(value);
+                }}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select transaction type" />
@@ -131,7 +165,7 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
                   <SelectItem key="0" value="0">
                       Pilih Kategori
                   </SelectItem>
-                  {categories.map((category) => (
+                  {filteredCategories.map((category) => (
                     <SelectItem key={category.id} value={String(category.id)}>
                       {category.name}
                     </SelectItem>
@@ -148,7 +182,7 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Tanggal</FormLabel>
-              <Popover>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -165,6 +199,7 @@ export function TransactionForm({ onSubmit, initialData, categories, onCancel }:
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
                     onSelect={(date) => {
+                      setPopoverOpen(false)
                       if (date) {
                         field.onChange(format(date, "yyyy-MM-dd")); // format ke YYYY-MM-DD
                       } else {

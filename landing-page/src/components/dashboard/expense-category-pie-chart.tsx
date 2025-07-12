@@ -17,11 +17,11 @@ interface ExpenseCategoryPieChartProps {
 }
 
 const generateChartConfig = (data: CategoryExpenseData[]) => {
-  const config: { [key: string]: { label: string; color: string } } = {}
+  const config: Record<string, { label: string; color: string }> = {}
   data.forEach((item, index) => {
     config[item.category] = {
       label: item.category,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`, // Cycle through 5 predefined chart colors
+      color: `hsl(var(--chart-${(index % 5) + 1}))`, // Cycle through 5 chart colors
     }
   })
   return config
@@ -37,7 +37,7 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
           <CardTitle>Distribusi Pengeluaran</CardTitle>
           <CardDescription>Rincian pengeluaran berdasarkan kategori.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="min-h-[300px] flex items-center justify-center">
           <p className="text-muted-foreground">Data pengeluaran tidak tersedia untuk ditampilkan.</p>
         </CardContent>
       </Card>
@@ -51,13 +51,22 @@ export function ExpenseCategoryPieChart({ data }: ExpenseCategoryPieChartProps) 
         <CardDescription>Rincian pengeluaran berdasarkan kategori.</CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-center">
-        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square min-h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-              <Pie data={data} dataKey="totalExpense" nameKey="category" innerRadius={60} strokeWidth={5}>
+              <Pie
+                data={data}
+                dataKey="totalExpense"
+                nameKey="category"
+                innerRadius={60}
+                strokeWidth={5}
+              >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={chartConfig[entry.category]?.color || `hsl(var(--chart-1))`} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={chartConfig[entry.category]?.color || `hsl(var(--chart-1))`}
+                  />
                 ))}
               </Pie>
               <ChartLegend content={<ChartLegendContent nameKey="category" />} className="-translate-y-2" />

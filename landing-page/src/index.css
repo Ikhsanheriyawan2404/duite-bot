@@ -53,6 +53,21 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* chart-1 = merah (pengeluaran) */
+    --chart-1: 0 80% 55%;     /* merah terang */
+
+    /* chart-2 = hijau (pemasukan) */
+    --chart-2: 140 70% 45%;   /* hijau segar */
+
+    /* chart-3 = biru netral */
+    --chart-3: 210 80% 55%;
+
+    /* chart-4 = ungu netral */
+    --chart-4: 270 70% 50%;
+
+    /* chart-5 = kuning netral */
+    --chart-5: 45 90% 55%;
   }
 
   .dark {
@@ -91,6 +106,21 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* chart-1 = merah redup */
+    --chart-1: 0 60% 70%;     /* merah lebih soft di dark mode */
+
+    /* chart-2 = hijau redup */
+    --chart-2: 140 40% 70%;   /* hijau lebih soft di dark mode */
+
+    /* chart-3 = biru redup */
+    --chart-3: 210 40% 75%;
+
+    /* chart-4 = ungu redup */
+    --chart-4: 270 35% 75%;
+
+    /* chart-5 = kuning redup */
+    --chart-5: 45 60% 65%;
   }
 }
 

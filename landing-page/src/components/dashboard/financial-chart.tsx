@@ -34,12 +34,13 @@ export function FinancialChart({ data }: FinancialChartProps) {
           <CardTitle>Ringkasan Bulanan</CardTitle>
           <CardDescription>Pendapatan dan pengeluaran per bulan.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="min-h-[300px] flex items-center justify-center">
           <p className="text-muted-foreground">Tidak ada data yang tersedia untuk grafik.</p>
         </CardContent>
       </Card>
     )
   }
+
   return (
     <Card>
       <CardHeader>
@@ -47,7 +48,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
         <CardDescription>Pendapatan dan pengeluaran per bulan.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+        <ChartContainer config={chartConfig} className="w-full min-h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 5, right: 20, left: 2, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />

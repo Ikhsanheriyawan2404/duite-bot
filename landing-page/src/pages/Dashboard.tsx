@@ -27,34 +27,48 @@ import { getMe, magicLogin } from "@/api/auth"
 import { createTransaction, deleteTransaction, fetchTransactions, updateTransaction } from "@/api/transactions"
 import { fetchCategories } from "@/api/categories"
 import { formatDate } from "@/lib/utils"
+import { ResponsiveContainer } from "recharts"
 
 const initialTransactions: Transaction[] = []
 
 export default function DashboardPage() {
   
-  const loadFilterTransactions = async () => {
+  const loadFilterTransactions = async (fetchedCategories: Category[]) => {
     try {
+      console.log({fetchedCategories})
       const typeParam = selectedType === "all" ? undefined : selectedType;
       const categoryParam = selectedCategory === "all" ? undefined : selectedCategory;
 
-      const fetched = await fetchTransactions(
+      const fetchTx = await fetchTransactions(
         typeParam,
         categoryParam,
         dateRange.from,
         dateRange.to
       );
-      setTransactions(fetched);
+
+      const mappedTx = fetchTx.map((tx) => {
+          const category = fetchedCategories.find(
+            (cat) => cat.id === tx.category_id
+          );
+        return {
+          ...tx,
+          category: category!.name
+        }
+      })
+      setTransactions(mappedTx);
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
     }
   };
 
-  const loadCategories = async () => {
+  const loadCategories = async (): Promise<Category[]> => {
     try {
       const fetchedCategories = await fetchCategories();
       setCategories(fetchedCategories);
+      return fetchedCategories
     } catch (error) {
       console.error("Failed to fetch categories:", error);
+      return []
     }
   };
 
@@ -91,8 +105,8 @@ export default function DashboardPage() {
 
         // lanjutkan login menggunakan token yang sudah disimpan
         await getMe()
-        await loadCategories();
-        await loadFilterTransactions();
+        const fetchedCategories = await loadCategories();
+        await loadFilterTransactions(fetchedCategories);
       } catch (err) {
         console.error("Login or fetch error:", err)
         alert("gagal login")
@@ -103,8 +117,20 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    loadFilterTransactions();
+    loadFilterTransactions(categories);
   }, [selectedType, selectedCategory, dateRange]);
+
+  // const transactionsWithCategory = useMemo(() => {
+  //   return transactions.map((transaction) => {
+  //     const category = categories.find(
+  //       (cat) => cat.id === transaction.category_id
+  //     );
+  //     return {
+  //       ...transaction,
+  //       category: category!.name,
+  //     };
+  //   });
+  // }, [transactions, categories]);
 
 
   const summaryData = useMemo(() => {
@@ -143,6 +169,8 @@ export default function DashboardPage() {
       .forEach((transaction) => {
         categoryMap[transaction.category] = (categoryMap[transaction.category] || 0) + transaction.amount
       })
+
+      console.log({categoryMap})
     return Object.entries(categoryMap)
       .map(([category, totalExpense]) => ({ category, totalExpense }))
       .sort((a, b) => b.totalExpense - a.totalExpense) // Sort for consistent pie chart segment order
@@ -295,12 +323,12 @@ export default function DashboardPage() {
 
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground text-sm">
-          Menampilkan data untuk: 
-          <strong>
-          {dateRange.from && dateRange.to
-            ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
-            : "-"}
-          </strong>
+          Menampilkan data untuk :
+          <span className="ml-1 font-semibold">
+            {dateRange.from && dateRange.to
+              ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
+              : "-"}
+          </span>    
         </p>
       </div>
 
@@ -316,26 +344,56 @@ export default function DashboardPage() {
           />
       </section>
 
-      {/* Charts Section */}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-        {/* Chart 1 - Akan sejajar dengan Chart 2 di desktop */}
+        {/* Chart 1 */}
         <div className="h-full min-h-[300px]">
-          <FinancialChart data={monthlyIncomeExpenseData} />
+          <ResponsiveContainer width="100%" height="100%">
+            <FinancialChart data={monthlyIncomeExpenseData} />
+          </ResponsiveContainer>
         </div>
-        
-        {/* Chart 2 - Akan sejajar dengan Chart 1 di desktop */}
+
+        {/* Chart 2 */}
         <div className="h-full min-h-[300px]">
-          <ExpenseCategoryPieChart data={expenseCategoryData} />
+          <ResponsiveContainer width="100%" height="100%">
+            <ExpenseCategoryPieChart data={expenseCategoryData} />
+          </ResponsiveContainer>
         </div>
-        
-        {/* Chart 3 - Selalu full width */}
+
+        {/* Chart 3 */}
         {/* <div className="h-full min-h-[300px] md:col-span-2">
-          <BalanceTrendChart data={balanceTrendData} />
+          <ResponsiveContainer width="100%" height="100%">
+            <BalanceTrendChart data={balanceTrendData} />
+          </ResponsiveContainer>
         </div> */}
       </section>
 
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Transactions</h2>
+      <section className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold">Transactions</h2>
+
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Buat Transaksi
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Tambah Transaksi Baru</DialogTitle>
+                <DialogDescription>
+                  Lengkapi rincian transaksi baru Anda.
+                </DialogDescription>
+              </DialogHeader>
+
+              <TransactionForm
+                categories={categories}
+                onSubmit={handleAddTransaction}
+                onCancel={() => setIsAddDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <TransactionFilters
           dateRange={dateRange}
           onDateRangeChange={(range) => setDateRange(range ?? { from: undefined })}
@@ -343,23 +401,21 @@ export default function DashboardPage() {
           onSelectedTypeChange={setSelectedType}
           selectedCategory={selectedCategory}
           onSelectedCategoryChange={setSelectedCategory}
-          categories={categories}
+          categories={
+            selectedType === "all"
+              ? categories
+              : categories.filter(category => category.type === selectedType)
+          }
           onResetFilters={resetFilters}
         />
         
-        {categories.length > 0 && (
+        {/* {categories.length > 0 && ( */}
           <TransactionsTable
-            transactions={transactions.map((transaction) => {
-              const category = categories.find((cat) => cat.id === transaction.category_id);
-              return {
-                ...transaction,
-                category: category!.name,
-              };
-            })}
+            transactions={transactions}
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}
           />
-        )}
+        {/* )} */}
       </section>
 
       {/* Edit Transaction Dialog */}

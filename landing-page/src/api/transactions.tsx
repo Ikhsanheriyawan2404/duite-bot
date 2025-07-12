@@ -33,14 +33,14 @@ async function fetchWithAuth(input: string, init?: RequestInit): Promise<Respons
 
 export async function fetchTransactions(
   type?: string,
-  category?: string,
+  category_id?: string,
   start_date?: Date,
   end_date?: Date
 ): Promise<Transaction[]> {
   const params = new URLSearchParams()
 
   if (type) params.append("type", type)
-  if (category) params.append("category", category)
+  if (category_id) params.append("category_id", category_id)
   if (start_date) params.append("start_date", start_date.toISOString().slice(0, 10))
   if (end_date) params.append("end_date", end_date.toISOString().slice(0, 10))
 
