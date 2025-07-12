@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"gateway/model"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,11 +21,12 @@ func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
 // Create Transaction
 func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
+	chatID, _ := strconv.ParseInt(userID, 10, 64)
 
 	var input struct {
 		Amount         float64 `json:"amount"`
 		TransactionType string  `json:"transaction_type"` // income / expense
-		Category       string  `json:"category"`
+		CategoryID       uint  `json:"category_id"`
 		TransactionDate string  `json:"transaction_date"` // Format: YYYY-MM-DD
 		OriginalText   string  `json:"original_text"`
 	}
@@ -38,13 +40,6 @@ func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 	if input.Amount <= 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Amount must be greater than 0",
-		})
-	}
-	
-	// Validasi wajib isi: category tidak boleh kosong
-	if strings.TrimSpace(input.Category) == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Category is required",
 		})
 	}
 
@@ -63,10 +58,10 @@ func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 	}
 
 	transaction := model.Transaction{
-		ChatID:           userID,
+		ChatID:           chatID,
 		Amount:           input.Amount,
-		TransactionType:  input.TransactionType,
-		Category:         input.Category,
+		TransactionType:  model.TransactionType(transactionType),
+		CategoryID:       input.CategoryID,
 		TransactionDate:  parsedDate,
 		OriginalText:     input.OriginalText,
 		CreatedAt:        time.Now(),
@@ -151,7 +146,7 @@ func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
 	var input struct {
 		Amount         float64 `json:"amount"`
 		TransactionType string  `json:"transaction_type"` // income / expense
-		Category       string  `json:"category"`
+		CategoryID      uint  `json:"category_id"`
 		TransactionDate string  `json:"transaction_date"`
 		OriginalText   string  `json:"original_text"`
 	}
@@ -174,13 +169,6 @@ func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
 			"error": "Amount must be greater than 0",
 		})
 	}
-	
-	// Validasi wajib isi: category tidak boleh kosong
-	if strings.TrimSpace(input.Category) == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Category is required",
-		})
-	}
 
 	transactionType := strings.ToUpper(strings.TrimSpace(input.TransactionType))
 	if transactionType != "INCOME" && transactionType != "EXPENSE" {
@@ -197,7 +185,7 @@ func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
 	}
 
 	transaction.Amount = input.Amount
-	transaction.Category = input.Category
+	transaction.CategoryID = input.CategoryID
 	transaction.OriginalText = input.OriginalText
 	if !parsedDate.IsZero() {
 		transaction.TransactionDate = parsedDate

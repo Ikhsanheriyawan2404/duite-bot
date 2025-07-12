@@ -20,6 +20,9 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(conf.DB, conf.Redis)
 	transactionHandler := handlers.NewTransactionHandler(conf.DB)
+	categoryHandler := handlers.NewCategoryHandler(conf.DB)
+
+	app.Get("/categories", middleware.JWTMiddleware, categoryHandler.GetCategories)
 
 	app.Route("/transactions", func(r fiber.Router) {
 		r.Use(middleware.JWTMiddleware)
@@ -30,7 +33,6 @@ func main() {
 		r.Put("/:id", transactionHandler.UpdateTransaction)
 		r.Delete("/:id", transactionHandler.DeleteTransaction)
 	})
-	
 
 	app.Post("/auth/magic-login", authHandler.MagicLogin)
 	app.Post("/auth/refresh", authHandler.RefreshToken)
